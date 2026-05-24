@@ -64,9 +64,5 @@ def get_profiles_for_browser(browser_name):
     # Deduplicate and sort
     profiles = list(set(profiles))
     profiles.sort()
-    
-    # Always provide at least a Default option if nothing is found
-    if not profiles:
-        profiles = ["Default"]
         
     return profiles

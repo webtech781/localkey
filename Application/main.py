@@ -622,7 +622,8 @@ class PasswordManager(ctk.CTk):
         top.title("Add Browser Integration")
         top.geometry("450x380")
         top.attributes('-topmost', True)
-        top.grab_set()
+        # Delay the grab_set to ensure the window is fully rendered on Linux/Wayland
+        top.after(100, top.grab_set)
         
         lbl = ctk.CTkLabel(top, text="Connect a Browser", font=ctk.CTkFont(size=20, weight="bold"))
         lbl.pack(pady=(20, 10))
@@ -630,9 +631,14 @@ class PasswordManager(ctk.CTk):
         browser_lbl = ctk.CTkLabel(top, text="1. Select Browser:", font=ctk.CTkFont(size=12))
         browser_lbl.pack(anchor="w", padx=40, pady=(10, 0))
         
-        supported_browsers = ["Select...", "Firefox", "Chrome", "Brave", "Chromium", "Edge"]
+        all_supported = ["Firefox", "Chrome", "Brave", "Chromium", "Edge"]
+        installed_browsers = ["Select..."] + [b for b in all_supported if len(browser_profiles.get_profiles_for_browser(b)) > 0]
+        
+        if len(installed_browsers) == 1:
+            installed_browsers = ["Select...", "No browsers found"]
+            
         browser_var = ctk.StringVar(value="Select...")
-        browser_dropdown = ctk.CTkOptionMenu(top, values=supported_browsers, variable=browser_var, width=320)
+        browser_dropdown = ctk.CTkOptionMenu(top, values=installed_browsers, variable=browser_var, width=320)
         browser_dropdown.pack(pady=(5, 10))
         
         profile_lbl = ctk.CTkLabel(top, text="2. Select Profile:", font=ctk.CTkFont(size=12))
@@ -644,13 +650,14 @@ class PasswordManager(ctk.CTk):
         
         def on_browser_select(*args):
             b = browser_var.get()
-            if b != "Select...":
+            if b != "Select..." and b != "No browsers found":
                 profiles = browser_profiles.get_profiles_for_browser(b)
                 profile_dropdown.configure(state="normal", values=profiles)
                 if profiles:
                     profile_var.set(profiles[0])
-                else:
-                    profile_var.set("Default")
+            else:
+                profile_dropdown.configure(state="disabled", values=["Select a browser first"])
+                profile_var.set("Select a browser first")
         browser_var.trace_add("write", on_browser_select)
         
         def do_connect():
