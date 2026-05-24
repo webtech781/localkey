@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
+import tkinter as tk
 from database import Database
 from crypto_utils import save_to_keyring, get_from_keyring, delete_from_keyring, derive_key
 from extension_installer import is_installed, is_installed_for_browser, install_for_browser, uninstall_for_browser, get_installed_extension_details
@@ -17,6 +18,15 @@ class PasswordManager(ctk.CTk):
         super().__init__()
         self.title("VaultMate - Password Manager")
         self.geometry("900x650")
+        
+        # Set window icon
+        _icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon256.png")
+        if os.path.exists(_icon_path):
+            try:
+                _icon_img = tk.PhotoImage(file=_icon_path)
+                self.iconphoto(True, _icon_img)
+            except Exception:
+                pass
         
         self.db = Database()
         self.current_user = None
@@ -255,7 +265,79 @@ class PasswordManager(ctk.CTk):
         self.save_last_username("") # Clear auto-login
         self.show_login_page()
 
+    def show_quick_lookup_panel(self):
+        """Floating always-on-top credential search panel for use while in other apps."""
+        panel = ctk.CTkToplevel(self)
+        panel.title("VaultMate — Quick Lookup")
+        panel.geometry("460x520")
+        panel.attributes('-topmost', True)
+        panel.after(100, panel.grab_set)
+
+        panel.grid_columnconfigure(0, weight=1)
+        panel.grid_rowconfigure(1, weight=1)
+
+        # Search bar
+        search_var = ctk.StringVar()
+        search_entry = ctk.CTkEntry(panel, placeholder_text="🔍  Search by site, app or username...", textvariable=search_var, height=40, corner_radius=10, border_width=1)
+        search_entry.grid(row=0, column=0, sticky="ew", padx=16, pady=(16, 8))
+        search_entry.focus()
+
+        # Results list
+        results_frame = ctk.CTkScrollableFrame(panel, fg_color="transparent")
+        results_frame.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 16))
+        results_frame.grid_columnconfigure(0, weight=1)
+
+        # Gather all credentials
+        all_creds = []
+        if self.current_user:
+            try:
+                for p in self.db.get_web_passwords(self.current_user['id'], self.current_user['key']):
+                    all_creds.append({'label': p['website_name'], 'sub': p['web_url'], 'username': p['username'], 'password': p['password'], 'type': 'web'})
+                for p in self.db.get_app_passwords(self.current_user['id'], self.current_user['key']):
+                    all_creds.append({'label': p['app_name'], 'sub': '', 'username': p['username'], 'password': p['password'], 'type': 'app'})
+            except Exception:
+                pass
+
+        def copy_val(val, kind):
+            self.clipboard_clear()
+            self.clipboard_append(val)
+            self._show_copy_toast(f"{kind} copied!")
+
+        def render_results(query=""):
+            for w in results_frame.winfo_children():
+                w.destroy()
+            q = query.lower().strip()
+            filtered = [c for c in all_creds if not q or q in c['label'].lower() or q in c['sub'].lower() or q in c['username'].lower()]
+            if not filtered:
+                ctk.CTkLabel(results_frame, text="No matching credentials", text_color="gray").grid(row=0, column=0, pady=30)
+                return
+            for i, c in enumerate(filtered):
+                card = ctk.CTkFrame(results_frame, corner_radius=10, fg_color=("gray92", "gray18"))
+                card.grid(row=i, column=0, sticky="ew", pady=4)
+                card.grid_columnconfigure(0, weight=1)
+
+                icon = "🌐" if c['type'] == 'web' else "💻"
+                info = ctk.CTkFrame(card, fg_color="transparent")
+                info.grid(row=0, column=0, sticky="w", padx=14, pady=10)
+                ctk.CTkLabel(info, text=f"{icon}  {c['label']}", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, sticky="w")
+                if c['sub']:
+                    ctk.CTkLabel(info, text=c['sub'], font=ctk.CTkFont(size=11), text_color="gray").grid(row=1, column=0, sticky="w")
+                ctk.CTkLabel(info, text=f"👤  {c['username']}", font=ctk.CTkFont(size=12)).grid(row=2, column=0, sticky="w", pady=(4, 0))
+
+                btn_frame = ctk.CTkFrame(card, fg_color="transparent")
+                btn_frame.grid(row=0, column=1, sticky="e", padx=10, pady=10)
+                ctk.CTkButton(btn_frame, text="Copy User", width=80, height=26, font=ctk.CTkFont(size=11),
+                              fg_color="#34C759", hover_color="#28A745", corner_radius=6,
+                              command=lambda u=c['username']: copy_val(u, "Username")).grid(row=0, column=0, pady=3)
+                ctk.CTkButton(btn_frame, text="Copy Pass", width=80, height=26, font=ctk.CTkFont(size=11),
+                              fg_color="#007AFF", hover_color="#0056B3", corner_radius=6,
+                              command=lambda p=c['password']: copy_val(p, "Password")).grid(row=1, column=0, pady=3)
+
+        render_results()
+        search_var.trace_add("write", lambda *_: render_results(search_var.get()))
+
     def show_main_dashboard(self):
+
         self.clear_frame()
         self.theme_btn.place_forget() # Hide the global floating theme button since we move it to the sidebar
         
@@ -289,6 +371,9 @@ class PasswordManager(ctk.CTk):
         
         import_btn = ctk.CTkButton(self.sidebar_frame, text="🔓 Import Backup", command=self.import_backup, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
         import_btn.grid(row=6, column=0, padx=20, pady=5, sticky="ew")
+        
+        quick_btn = ctk.CTkButton(self.sidebar_frame, text="🔍 Quick Lookup", command=self.show_quick_lookup_panel, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        quick_btn.grid(row=7, column=0, padx=20, pady=5, sticky="ew")
         
         self.theme_btn_sidebar = ctk.CTkButton(self.sidebar_frame, text="🌓 Toggle Theme", command=self.toggle_theme, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
         self.theme_btn_sidebar.grid(row=8, column=0, padx=20, pady=(10, 5), sticky="ew")
