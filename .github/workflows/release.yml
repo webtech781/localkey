@@ -112,16 +112,18 @@ jobs:
           VAULTMATE_VERSION: ${{ env.VERSION }}
         run: |
           $version = $env:VAULTMATE_VERSION
-          # Patch version into NSI
-          $nsi = Get-Content installer\vaultmate.nsi -Raw
-          $nsi = $nsi -replace '\$%VAULTMATE_VERSION%', $version
-          Set-Content installer\vaultmate_patched.nsi $nsi
-          # Run makensis from the repo root so relative paths work
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /V2 installer\vaultmate_patched.nsi
-          # Rename output to include version
+          # NSIS reads $%VAULTMATE_VERSION% natively from the process environment.
+          # Run makensis from the repo root so relative paths (Application\dist\...) work.
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /V2 installer\vaultmate.nsi
+          # The OutFile in vaultmate.nsi writes: VaultMate-Setup-${APP_VERSION}-windows.exe
           $out = "VaultMate-Setup-${version}-windows.exe"
-          Move-Item "VaultMate-Setup-${version}-windows.exe" $out -ErrorAction SilentlyContinue
-          Get-ChildItem *.exe
+          if (Test-Path $out) {
+            Write-Host "✅ Installer created: $out"
+          } else {
+            Write-Error "❌ Expected installer not found. Listing .exe files:"
+            Get-ChildItem *.exe
+            exit 1
+          }
 
       - uses: actions/upload-artifact@v4
         with:

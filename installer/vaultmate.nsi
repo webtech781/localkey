@@ -49,7 +49,7 @@ Section "VaultMate (required)" SecMain
     SetOutPath "$INSTDIR"
 
     ; Copy all files from the PyInstaller dist folder
-    File /r "dist\VaultMate\*.*"
+    File /r "Application\dist\VaultMate\*.*"
 
     ; Write install location to registry
     WriteRegStr HKCU "Software\VaultMate" "InstallDir" "$INSTDIR"
