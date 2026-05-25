@@ -1,0 +1,903 @@
+import customtkinter as ctk
+from tkinter import messagebox, filedialog
+import tkinter as tk
+from database import Database
+from crypto_utils import save_to_keyring, get_from_keyring, delete_from_keyring, derive_key
+from extension_installer import is_installed, is_installed_for_browser, install_for_browser, uninstall_for_browser, get_installed_extension_details
+import json
+import os
+import browser_profiles
+
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("blue")
+
+CONFIG_FILE = "vaultmate_config.json"
+
+class PasswordManager(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("VaultMate - Password Manager")
+        self.geometry("900x650")
+        
+        # Set window icon — use PIL for reliable PNG/ICO support
+        _icon_dir = os.path.dirname(os.path.abspath(__file__))
+        try:
+            from PIL import Image, ImageTk as _ITk
+            _img = Image.open(os.path.join(_icon_dir, "icon256.png"))
+            self._app_icon = _ITk.PhotoImage(_img)  # keep reference!
+            self.iconphoto(True, self._app_icon)
+        except Exception:
+            # Fallback: try .ico (Windows) then silent skip
+            try:
+                self.iconbitmap(os.path.join(_icon_dir, "vaultmate.ico"))
+            except Exception:
+                pass
+        
+        self.db = Database()
+        self.current_user = None
+        
+        # Configure grid system
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        
+        self.main_frame = ctk.CTkFrame(self)
+        self.main_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+        
+        # Add a global theme toggle button (hidden on dashboard, shown elsewhere)
+        self.theme_btn = ctk.CTkButton(self, text="🌓 Toggle Theme", command=self.toggle_theme, width=120, fg_color="transparent", border_width=1, text_color=("gray10", "#DCE4EE"))
+        self.theme_btn.place(relx=0.98, rely=0.02, anchor="ne")
+        
+        self.attempt_auto_login()
+
+    def toggle_theme(self):
+        current = ctk.get_appearance_mode()
+        if current == "Dark":
+            ctk.set_appearance_mode("Light")
+        else:
+            ctk.set_appearance_mode("Dark")
+
+    def get_last_username(self):
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+                    return config.get("last_username")
+            except Exception:
+                pass
+        return None
+
+    def save_last_username(self, username):
+        config = {}
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+            except Exception:
+                pass
+                
+        config["last_username"] = username
+        try:
+            with open(CONFIG_FILE, "w") as f:
+                json.dump(config, f)
+        except Exception:
+            pass
+
+    def get_browser_profile(self, browser_name):
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+                    profiles = config.get("browser_profiles", {})
+                    return profiles.get(browser_name)
+            except Exception:
+                pass
+        return None
+
+    def save_browser_profile(self, browser_name, profile_name):
+        config = {}
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+            except Exception:
+                pass
+        
+        if "browser_profiles" not in config:
+            config["browser_profiles"] = {}
+            
+        config["browser_profiles"][browser_name] = profile_name
+        
+        try:
+            with open(CONFIG_FILE, "w") as f:
+                json.dump(config, f)
+        except Exception:
+            pass
+
+    def delete_browser_profile(self, browser_name):
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+                
+                if "browser_profiles" in config and browser_name in config["browser_profiles"]:
+                    del config["browser_profiles"][browser_name]
+                    with open(CONFIG_FILE, "w") as f:
+                        json.dump(config, f)
+            except Exception:
+                pass
+
+    def attempt_auto_login(self):
+        username = self.get_last_username()
+        if username:
+            try:
+                # This call might trigger the OS biometric/PIN prompt
+                password = get_from_keyring(username)
+                if password:
+                    user = self.db.login(username, password)
+                    if user:
+                        self.current_user = user
+                        self.show_main_dashboard()
+                        return
+            except Exception as e:
+                print(f"Keyring auto-login failed: {e}")
+        
+        self.show_login_page()
+
+    def clear_frame(self):
+        for widget in self.main_frame.winfo_children():
+            widget.destroy()
+        self.main_frame.grid_rowconfigure((0, 1, 2, 3, 4, 5, 6, 7, 8, 9), weight=0)
+        self.main_frame.grid_columnconfigure((0, 1, 2, 3), weight=0)
+
+    def show_login_page(self):
+        self.clear_frame()
+        self.theme_btn.place(relx=0.98, rely=0.02, anchor="ne") # Show global toggle
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        
+        # Logo image
+        _icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon128.png")
+        try:
+            from PIL import Image, ImageTk as _ITk
+            _logo_pil = Image.open(_icon_path).resize((80, 80), Image.LANCZOS)
+            _logo_ctk = ctk.CTkImage(light_image=_logo_pil, dark_image=_logo_pil, size=(80, 80))
+            logo_img_lbl = ctk.CTkLabel(self.main_frame, image=_logo_ctk, text="")
+            logo_img_lbl.grid(row=0, column=0, pady=(40, 8))
+            title = ctk.CTkLabel(self.main_frame, text="VaultMate", font=ctk.CTkFont(family="Helvetica", size=32, weight="bold"))
+            title.grid(row=1, column=0, pady=(0, 20))
+        except Exception:
+            title = ctk.CTkLabel(self.main_frame, text="🔐 VaultMate", font=ctk.CTkFont(family="Helvetica", size=36, weight="bold"))
+            title.grid(row=0, column=0, pady=(60, 20))
+        
+        login_frame = ctk.CTkFrame(self.main_frame, width=400, corner_radius=12)
+        login_frame.grid(row=2, column=0, pady=20)
+        login_frame.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkLabel(login_frame, text="Login to your Vault", font=ctk.CTkFont(family="Helvetica", size=18)).grid(row=0, column=0, pady=(30, 20))
+        
+        self.username_entry = ctk.CTkEntry(login_frame, placeholder_text="Username", width=260, height=40)
+        self.username_entry.grid(row=1, column=0, pady=(0, 15))
+        
+        last_user = self.get_last_username()
+        if last_user:
+            self.username_entry.insert(0, last_user)
+        
+        self.password_entry = ctk.CTkEntry(login_frame, placeholder_text="Master Password", show="*", width=260, height=40)
+        self.password_entry.grid(row=2, column=0, pady=(0, 15))
+        
+        self.remember_var = ctk.BooleanVar(value=True)
+        remember_cb = ctk.CTkCheckBox(login_frame, text="Remember Me (OS Biometrics/PIN)", variable=self.remember_var)
+        remember_cb.grid(row=3, column=0, pady=(0, 20))
+        
+        login_btn = ctk.CTkButton(login_frame, text="Login", command=self.login, width=260, height=40, fg_color="#007AFF", hover_color="#0056B3", corner_radius=8, font=ctk.CTkFont(family="Helvetica", size=14, weight="bold"))
+        login_btn.grid(row=4, column=0, pady=(0, 10))
+        
+        create_btn = ctk.CTkButton(login_frame, text="Create Local Account", command=self.show_create_account_page, fg_color="transparent", border_width=1, border_color="#007AFF", text_color=("gray10", "#DCE4EE"), width=260, height=40, corner_radius=8)
+        create_btn.grid(row=5, column=0, pady=(0, 30))
+
+    def show_create_account_page(self):
+        self.clear_frame()
+        self.theme_btn.place(relx=0.98, rely=0.02, anchor="ne")
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        
+        title = ctk.CTkLabel(self.main_frame, text="Create Vault", font=ctk.CTkFont(family="Helvetica", size=36, weight="bold"))
+        title.grid(row=0, column=0, pady=(60, 20))
+        
+        reg_frame = ctk.CTkFrame(self.main_frame, width=400, corner_radius=12)
+        reg_frame.grid(row=1, column=0, pady=20)
+        reg_frame.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkLabel(reg_frame, text="Set up your Master Password", font=ctk.CTkFont(family="Helvetica", size=18)).grid(row=0, column=0, pady=(30, 20))
+        
+        self.new_user_entry = ctk.CTkEntry(reg_frame, placeholder_text="Username", width=260, height=40)
+        self.new_user_entry.grid(row=1, column=0, pady=(0, 15))
+        
+        self.new_pass_entry = ctk.CTkEntry(reg_frame, placeholder_text="Master Password", show="*", width=260, height=40)
+        self.new_pass_entry.grid(row=2, column=0, pady=(0, 15))
+        
+        self.confirm_pass_entry = ctk.CTkEntry(reg_frame, placeholder_text="Confirm Master Password", show="*", width=260, height=40)
+        self.confirm_pass_entry.grid(row=3, column=0, pady=(0, 15))
+        
+        self.reg_remember_var = ctk.BooleanVar(value=True)
+        reg_remember_cb = ctk.CTkCheckBox(reg_frame, text="Enable OS Biometrics/PIN login", variable=self.reg_remember_var)
+        reg_remember_cb.grid(row=4, column=0, pady=(0, 20))
+        
+        create_btn = ctk.CTkButton(reg_frame, text="Create Account", command=self.create_account, width=260, height=40, fg_color="#007AFF", hover_color="#0056B3", corner_radius=8, font=ctk.CTkFont(family="Helvetica", size=14, weight="bold"))
+        create_btn.grid(row=5, column=0, pady=(0, 10))
+        
+        back_btn = ctk.CTkButton(reg_frame, text="Back to Login", command=self.show_login_page, fg_color="transparent", border_width=1, border_color="#007AFF", text_color=("gray10", "#DCE4EE"), width=260, height=40, corner_radius=8)
+        back_btn.grid(row=6, column=0, pady=(0, 30))
+
+    def create_account(self):
+        username = self.new_user_entry.get().strip()
+        password = self.new_pass_entry.get()
+        confirm = self.confirm_pass_entry.get()
+        
+        if not username or not password:
+            messagebox.showerror("Error", "All fields are required")
+            return
+            
+        if password != confirm:
+            messagebox.showerror("Error", "Passwords do not match")
+            return
+            
+        success, msg = self.db.create_user(username, password)
+        if success:
+            self.save_last_username(username)
+            if self.reg_remember_var.get():
+                try:
+                    save_to_keyring(username, password)
+                except Exception as e:
+                    print(f"Failed to save to keyring: {e}")
+                    
+            messagebox.showinfo("Success", "Account created successfully. You can now login.")
+            self.show_login_page()
+        else:
+            messagebox.showerror("Error", msg)
+
+    def login(self):
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get()
+        
+        user = self.db.login(username, password)
+        if user:
+            self.current_user = user
+            self.save_last_username(username)
+            if self.remember_var.get():
+                try:
+                    save_to_keyring(username, password)
+                except Exception as e:
+                    print(f"Failed to save to keyring: {e}")
+            else:
+                delete_from_keyring(username)
+                
+            self.show_main_dashboard()
+        else:
+            messagebox.showerror("Error", "Invalid username or password")
+
+    def logout(self):
+        if self.current_user:
+            delete_from_keyring(self.current_user['username'])
+        self.current_user = None
+        self.save_last_username("") # Clear auto-login
+        self.show_login_page()
+
+    def show_quick_lookup_panel(self):
+        """Floating always-on-top credential search panel for use while in other apps."""
+        panel = ctk.CTkToplevel(self)
+        panel.title("VaultMate — Quick Lookup")
+        panel.geometry("460x520")
+        panel.attributes('-topmost', True)
+        panel.after(100, panel.grab_set)
+
+        panel.grid_columnconfigure(0, weight=1)
+        panel.grid_rowconfigure(1, weight=1)
+
+        # Search bar
+        search_var = ctk.StringVar()
+        search_entry = ctk.CTkEntry(panel, placeholder_text="🔍  Search by site, app or username...", textvariable=search_var, height=40, corner_radius=10, border_width=1)
+        search_entry.grid(row=0, column=0, sticky="ew", padx=16, pady=(16, 8))
+        search_entry.focus()
+
+        # Results list
+        results_frame = ctk.CTkScrollableFrame(panel, fg_color="transparent")
+        results_frame.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 16))
+        results_frame.grid_columnconfigure(0, weight=1)
+
+        # Gather all credentials
+        all_creds = []
+        if self.current_user:
+            try:
+                for p in self.db.get_web_passwords(self.current_user['id'], self.current_user['key']):
+                    all_creds.append({'label': p['website_name'], 'sub': p['web_url'], 'username': p['username'], 'password': p['password'], 'type': 'web'})
+                for p in self.db.get_app_passwords(self.current_user['id'], self.current_user['key']):
+                    all_creds.append({'label': p['app_name'], 'sub': '', 'username': p['username'], 'password': p['password'], 'type': 'app'})
+            except Exception:
+                pass
+
+        def copy_val(val, kind):
+            self.clipboard_clear()
+            self.clipboard_append(val)
+            self._show_copy_toast(f"{kind} copied!")
+
+        def render_results(query=""):
+            for w in results_frame.winfo_children():
+                w.destroy()
+            q = query.lower().strip()
+            filtered = [c for c in all_creds if not q or q in c['label'].lower() or q in c['sub'].lower() or q in c['username'].lower()]
+            if not filtered:
+                ctk.CTkLabel(results_frame, text="No matching credentials", text_color="gray").grid(row=0, column=0, pady=30)
+                return
+            for i, c in enumerate(filtered):
+                card = ctk.CTkFrame(results_frame, corner_radius=10, fg_color=("gray92", "gray18"))
+                card.grid(row=i, column=0, sticky="ew", pady=4)
+                card.grid_columnconfigure(0, weight=1)
+
+                icon = "🌐" if c['type'] == 'web' else "💻"
+                info = ctk.CTkFrame(card, fg_color="transparent")
+                info.grid(row=0, column=0, sticky="w", padx=14, pady=10)
+                ctk.CTkLabel(info, text=f"{icon}  {c['label']}", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, sticky="w")
+                if c['sub']:
+                    ctk.CTkLabel(info, text=c['sub'], font=ctk.CTkFont(size=11), text_color="gray").grid(row=1, column=0, sticky="w")
+                ctk.CTkLabel(info, text=f"👤  {c['username']}", font=ctk.CTkFont(size=12)).grid(row=2, column=0, sticky="w", pady=(4, 0))
+
+                btn_frame = ctk.CTkFrame(card, fg_color="transparent")
+                btn_frame.grid(row=0, column=1, sticky="e", padx=10, pady=10)
+                ctk.CTkButton(btn_frame, text="Copy User", width=80, height=26, font=ctk.CTkFont(size=11),
+                              fg_color="#34C759", hover_color="#28A745", corner_radius=6,
+                              command=lambda u=c['username']: copy_val(u, "Username")).grid(row=0, column=0, pady=3)
+                ctk.CTkButton(btn_frame, text="Copy Pass", width=80, height=26, font=ctk.CTkFont(size=11),
+                              fg_color="#007AFF", hover_color="#0056B3", corner_radius=6,
+                              command=lambda p=c['password']: copy_val(p, "Password")).grid(row=1, column=0, pady=3)
+
+        render_results()
+        search_var.trace_add("write", lambda *_: render_results(search_var.get()))
+
+    def show_main_dashboard(self):
+
+        self.clear_frame()
+        self.theme_btn.place_forget() # Hide the global floating theme button since we move it to the sidebar
+        
+        self.main_frame.grid_rowconfigure(0, weight=1)
+        self.main_frame.grid_columnconfigure(0, weight=0) # Sidebar
+        self.main_frame.grid_columnconfigure(1, weight=1) # Main Content
+        
+        # --- Sidebar ---
+        self.sidebar_frame = ctk.CTkFrame(self.main_frame, width=220, corner_radius=0, fg_color=("gray90", "gray13"))
+        self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
+        self.sidebar_frame.grid_rowconfigure(9, weight=1)
+        
+        _icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon48.png")
+        try:
+            from PIL import Image as _PILImg
+            _sb_img = _PILImg.open(_icon_path)
+            _sb_ctk = ctk.CTkImage(light_image=_sb_img, dark_image=_sb_img, size=(36, 36))
+            _sb_logo_row = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
+            _sb_logo_row.grid(row=0, column=0, padx=16, pady=(24, 2), sticky="w")
+            ctk.CTkLabel(_sb_logo_row, image=_sb_ctk, text="").grid(row=0, column=0, padx=(0, 8))
+            ctk.CTkLabel(_sb_logo_row, text="VaultMate", font=ctk.CTkFont(family="Helvetica", size=20, weight="bold")).grid(row=0, column=1)
+        except Exception:
+            logo_label = ctk.CTkLabel(self.sidebar_frame, text="🔐 VaultMate", font=ctk.CTkFont(family="Helvetica", size=22, weight="bold"))
+            logo_label.grid(row=0, column=0, padx=20, pady=(30, 5), sticky="w")
+        
+        welcome_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"Hi, {self.current_user['username']}!", font=ctk.CTkFont(family="Helvetica", size=14), text_color="gray")
+        welcome_lbl.grid(row=1, column=0, padx=20, pady=(0, 30), sticky="w")
+        
+        add_app_btn = ctk.CTkButton(self.sidebar_frame, text="➕ App Password", command=self.show_add_app_password_page, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        add_app_btn.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
+        
+        add_web_btn = ctk.CTkButton(self.sidebar_frame, text="➕ Web Password", command=self.show_add_web_password_page, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        add_web_btn.grid(row=3, column=0, padx=20, pady=5, sticky="ew")
+        
+        ext_status = "✅ Browser Integrations"
+        add_ext_btn = ctk.CTkButton(self.sidebar_frame, text=ext_status, command=self.show_browser_integrations_page, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        add_ext_btn.grid(row=4, column=0, padx=20, pady=5, sticky="ew")
+        
+        export_btn = ctk.CTkButton(self.sidebar_frame, text="🔒 Export Backup", command=self.export_backup, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        export_btn.grid(row=5, column=0, padx=20, pady=5, sticky="ew")
+        
+        import_btn = ctk.CTkButton(self.sidebar_frame, text="🔓 Import Backup", command=self.import_backup, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        import_btn.grid(row=6, column=0, padx=20, pady=5, sticky="ew")
+        
+        quick_btn = ctk.CTkButton(self.sidebar_frame, text="🔍 Quick Lookup", command=self.show_quick_lookup_panel, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        quick_btn.grid(row=7, column=0, padx=20, pady=5, sticky="ew")
+        
+        self.theme_btn_sidebar = ctk.CTkButton(self.sidebar_frame, text="🌓 Toggle Theme", command=self.toggle_theme, fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray75", "gray25"), anchor="w")
+        self.theme_btn_sidebar.grid(row=8, column=0, padx=20, pady=(10, 5), sticky="ew")
+        
+        logout_btn = ctk.CTkButton(self.sidebar_frame, text="🚪 Logout", command=self.logout, fg_color="#E74C3C", hover_color="#C0392B", text_color="white", anchor="w")
+        logout_btn.grid(row=9, column=0, padx=20, pady=(5, 20), sticky="ew")
+        
+        # --- Main Content ---
+        self.content_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
+        self.content_frame.grid_rowconfigure(1, weight=1)
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        
+        header_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        header_frame.grid(row=0, column=0, sticky="ew", pady=(0, 20))
+        header_frame.grid_columnconfigure(0, weight=1)
+        
+        title_lbl = ctk.CTkLabel(header_frame, text="My Vault", font=ctk.CTkFont(family="Helvetica", size=32, weight="bold"))
+        title_lbl.grid(row=0, column=0, sticky="w")
+        
+        refresh_btn = ctk.CTkButton(header_frame, text="🔄 Refresh", command=self.load_passwords_view, width=100, fg_color="#007AFF", hover_color="#0056B3")
+        refresh_btn.grid(row=0, column=1, sticky="e")
+        
+        self.passwords_frame = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent")
+        self.passwords_frame.grid(row=1, column=0, sticky="nsew")
+        self.passwords_frame.grid_columnconfigure(0, weight=1)
+        
+        self.load_passwords_view()
+
+    def load_passwords_view(self):
+        # Clear existing
+        for w in self.passwords_frame.winfo_children():
+            w.destroy()
+            
+        app_passwords = self.db.get_app_passwords(self.current_user['id'], self.current_user['key'])
+        web_passwords = self.db.get_web_passwords(self.current_user['id'], self.current_user['key'])
+        passkeys = self.db.get_all_passkeys(self.current_user['id'], self.current_user['key'])
+        
+        row_idx = 0
+        
+        # Section: Web Passwords
+        if web_passwords:
+            ctk.CTkLabel(self.passwords_frame, text="Web Passwords", font=ctk.CTkFont(size=18, weight="bold")).grid(row=row_idx, column=0, sticky="w", pady=(10, 5), padx=10)
+            row_idx += 1
+            for p in web_passwords:
+                self.create_password_card(self.passwords_frame, p, is_web=True).grid(row=row_idx, column=0, sticky="ew", pady=5, padx=10)
+                row_idx += 1
+                
+        # Section: App Passwords
+        if app_passwords:
+            ctk.CTkLabel(self.passwords_frame, text="App Passwords", font=ctk.CTkFont(size=18, weight="bold")).grid(row=row_idx, column=0, sticky="w", pady=(20, 5), padx=10)
+            row_idx += 1
+            for p in app_passwords:
+                self.create_password_card(self.passwords_frame, p, is_web=False).grid(row=row_idx, column=0, sticky="ew", pady=5, padx=10)
+                row_idx += 1
+                
+        # Section: Passkeys
+        if passkeys:
+            ctk.CTkLabel(self.passwords_frame, text="Passkeys", font=ctk.CTkFont(size=18, weight="bold")).grid(row=row_idx, column=0, sticky="w", pady=(20, 5), padx=10)
+            row_idx += 1
+            for pk in passkeys:
+                self.create_passkey_card(self.passwords_frame, pk).grid(row=row_idx, column=0, sticky="ew", pady=5, padx=10)
+                row_idx += 1
+
+        if not app_passwords and not web_passwords and not passkeys:
+            ctk.CTkLabel(self.passwords_frame, text="No credentials saved yet.", text_color="gray").grid(row=row_idx, column=0, pady=40)
+
+    def create_passkey_card(self, parent, data):
+        card = ctk.CTkFrame(parent, corner_radius=12, fg_color=("white", "gray17"))
+        card.grid_columnconfigure(0, weight=1)
+        card.grid_columnconfigure(1, weight=0)
+        
+        domain = data['rp_id']
+        username = data.get('user_name', 'unknown')
+        pk_id = data['id']
+        
+        info_frame = ctk.CTkFrame(card, fg_color="transparent")
+        info_frame.grid(row=0, column=0, sticky="w", padx=20, pady=15)
+        
+        ctk.CTkLabel(info_frame, text=domain, font=ctk.CTkFont(family="Helvetica", size=18, weight="bold"), wraplength=350, justify="left").grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(info_frame, text=username, font=ctk.CTkFont(size=14), text_color="gray").grid(row=1, column=0, sticky="w")
+        ctk.CTkLabel(info_frame, text="WebAuthn Passkey (Passwordless)", font=ctk.CTkFont(size=12), text_color="#10A37F").grid(row=2, column=0, sticky="w", pady=(2, 0))
+        
+        pass_frame = ctk.CTkFrame(card, fg_color="transparent")
+        pass_frame.grid(row=0, column=1, sticky="e", padx=20, pady=15)
+        
+        def delete_pk():
+            if messagebox.askyesno("Confirm", f"Are you sure you want to delete the passkey for {domain}?"):
+                self.db.delete_passkey(pk_id)
+                self.load_passwords_view()
+                
+        delete_btn = ctk.CTkButton(pass_frame, text="Delete", width=60, fg_color="#E74C3C", hover_color="#C0392B", corner_radius=6, command=delete_pk)
+        delete_btn.grid(row=0, column=0, padx=(0, 10))
+        
+        return card
+
+    def create_password_card(self, parent, data, is_web=False):
+        card = ctk.CTkFrame(parent, corner_radius=12, fg_color=("white", "gray17"))
+        card.grid_columnconfigure(0, weight=1)
+        card.grid_columnconfigure(1, weight=0)
+
+        title = data['website_name'] if is_web else data['app_name']
+        subtitle = data['web_url'] if is_web else ""
+        username = data['username']
+        password = data['password']
+        pid = data['id']
+
+        def copy_text(text, label="Text"):
+            self.clipboard_clear()
+            self.clipboard_append(text)
+            self.after(0, lambda: self._show_copy_toast(f"{label} copied!"))
+
+        # --- Left: Info Block ---
+        info_frame = ctk.CTkFrame(card, fg_color="transparent")
+        info_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=15)
+
+        ctk.CTkLabel(info_frame, text=title, font=ctk.CTkFont(family="Helvetica", size=16, weight="bold"), wraplength=300, justify="left").grid(row=0, column=0, columnspan=3, sticky="w")
+
+        # URL row (web only)
+        if subtitle:
+            ctk.CTkLabel(info_frame, text="🌐", font=ctk.CTkFont(size=11)).grid(row=1, column=0, sticky="w", pady=(6, 0))
+            ctk.CTkLabel(info_frame, text=subtitle, font=ctk.CTkFont(size=11), text_color="gray", wraplength=280, justify="left").grid(row=1, column=1, sticky="w", padx=(4, 8), pady=(6, 0))
+            ctk.CTkButton(info_frame, text="Copy URL", width=72, height=22, font=ctk.CTkFont(size=11), fg_color="#5856D6", hover_color="#3D3BBF", corner_radius=6,
+                          command=lambda: copy_text(subtitle, "URL")).grid(row=1, column=2, sticky="w", pady=(6, 0))
+
+        # Username row
+        ctk.CTkLabel(info_frame, text="👤", font=ctk.CTkFont(size=11)).grid(row=2, column=0, sticky="w", pady=(6, 0))
+        ctk.CTkLabel(info_frame, text=username, font=ctk.CTkFont(size=13)).grid(row=2, column=1, sticky="w", padx=(4, 8), pady=(6, 0))
+        ctk.CTkButton(info_frame, text="Copy User", width=72, height=22, font=ctk.CTkFont(size=11), fg_color="#34C759", hover_color="#28A745", corner_radius=6,
+                      command=lambda: copy_text(username, "Username")).grid(row=2, column=2, sticky="w", pady=(6, 0))
+
+        # Password row
+        ctk.CTkLabel(info_frame, text="🔑", font=ctk.CTkFont(size=11)).grid(row=3, column=0, sticky="w", pady=(6, 0))
+        pass_label = ctk.CTkLabel(info_frame, text="••••••••••", font=ctk.CTkFont(size=13))
+        pass_label.grid(row=3, column=1, sticky="w", padx=(4, 8), pady=(6, 0))
+        ctk.CTkButton(info_frame, text="Copy Pass", width=72, height=22, font=ctk.CTkFont(size=11), fg_color="#007AFF", hover_color="#0056B3", corner_radius=6,
+                      command=lambda: copy_text(password, "Password")).grid(row=3, column=2, sticky="w", pady=(6, 0))
+
+        # --- Right: View / Delete buttons ---
+        btn_frame = ctk.CTkFrame(card, fg_color="transparent")
+        btn_frame.grid(row=0, column=1, sticky="ne", padx=16, pady=15)
+
+        # Password entry (hidden, toggled by View)
+        pass_entry = ctk.CTkEntry(btn_frame, width=130, show="*", border_width=1, corner_radius=6)
+        pass_entry.insert(0, password)
+        pass_entry.configure(state="readonly")
+        pass_entry.grid(row=0, column=0, padx=(0, 8), pady=(0, 8))
+
+        def toggle_view():
+            if pass_entry.cget("show") == "*":
+                pass_entry.configure(show="")
+                pass_label.configure(text=password)
+                view_btn.configure(text="Hide")
+            else:
+                pass_entry.configure(show="*")
+                pass_label.configure(text="••••••••••")
+                view_btn.configure(text="View")
+
+        def delete_pass():
+            if messagebox.askyesno("Confirm", "Are you sure you want to delete this password?"):
+                if is_web:
+                    self.db.delete_web_password(pid, self.current_user['id'])
+                else:
+                    self.db.delete_app_password(pid, self.current_user['id'])
+                self.load_passwords_view()
+
+        view_btn = ctk.CTkButton(btn_frame, text="View", width=70, fg_color="transparent", text_color=("gray10", "gray90"), border_width=1, corner_radius=6, command=toggle_view)
+        view_btn.grid(row=1, column=0, pady=(0, 6))
+
+        del_btn = ctk.CTkButton(btn_frame, text="Delete", width=70, fg_color="transparent", text_color="#E74C3C", hover_color="#FDEDEC", border_width=1, border_color="#E74C3C", corner_radius=6, command=delete_pass)
+        del_btn.grid(row=2, column=0)
+
+        return card
+
+    def _show_copy_toast(self, message):
+        """Show a brief non-blocking toast notification for copy actions."""
+        toast = ctk.CTkToplevel(self)
+        toast.overrideredirect(True)
+        toast.attributes('-topmost', True)
+        toast.configure(fg_color="#1C1C1E")
+        lbl = ctk.CTkLabel(toast, text=f"  ✓  {message}  ", font=ctk.CTkFont(size=13), text_color="#30D158", fg_color="#1C1C1E", corner_radius=10)
+        lbl.pack(padx=8, pady=8)
+        # Position bottom-right of main window
+        self.update_idletasks()
+        x = self.winfo_x() + self.winfo_width() - 220
+        y = self.winfo_y() + self.winfo_height() - 70
+        toast.geometry(f"+{x}+{y}")
+        toast.after(1800, toast.destroy)
+
+
+    def show_add_app_password_page(self):
+        self.clear_frame()
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkButton(self.main_frame, text="← Back", width=80, command=self.show_main_dashboard).grid(row=0, column=0, sticky="w", padx=20, pady=20)
+        
+        title = ctk.CTkLabel(self.main_frame, text="Add App Password", font=ctk.CTkFont(size=24, weight="bold"))
+        title.grid(row=1, column=0, pady=(0, 20))
+        
+        form_frame = ctk.CTkFrame(self.main_frame, width=400)
+        form_frame.grid(row=2, column=0, pady=10)
+        form_frame.grid_columnconfigure(0, weight=1)
+        
+        self.app_name_entry = ctk.CTkEntry(form_frame, placeholder_text="App Name (e.g. Steam)", width=300)
+        self.app_name_entry.grid(row=0, column=0, pady=(20, 10), padx=20)
+        
+        self.app_user_entry = ctk.CTkEntry(form_frame, placeholder_text="Username / Email", width=300)
+        self.app_user_entry.grid(row=1, column=0, pady=10, padx=20)
+        
+        self.app_pass_entry = ctk.CTkEntry(form_frame, placeholder_text="Password", show="*", width=300)
+        self.app_pass_entry.grid(row=2, column=0, pady=10, padx=20)
+        
+        self.app_note_entry = ctk.CTkEntry(form_frame, placeholder_text="Note (Optional)", width=300)
+        self.app_note_entry.grid(row=3, column=0, pady=10, padx=20)
+        
+        save_btn = ctk.CTkButton(form_frame, text="Save Password", command=self.save_app_password, width=300)
+        save_btn.grid(row=4, column=0, pady=(10, 20), padx=20)
+
+    def show_add_web_password_page(self):
+        self.clear_frame()
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkButton(self.main_frame, text="← Back", width=80, command=self.show_main_dashboard).grid(row=0, column=0, sticky="w", padx=20, pady=20)
+        
+        title = ctk.CTkLabel(self.main_frame, text="Add Web Password", font=ctk.CTkFont(size=24, weight="bold"))
+        title.grid(row=1, column=0, pady=(0, 20))
+        
+        form_frame = ctk.CTkFrame(self.main_frame, width=400)
+        form_frame.grid(row=2, column=0, pady=10)
+        form_frame.grid_columnconfigure(0, weight=1)
+        
+        self.web_url_entry = ctk.CTkEntry(form_frame, placeholder_text="Website URL (e.g. https://github.com)", width=300)
+        self.web_url_entry.grid(row=0, column=0, pady=(20, 10), padx=20)
+        
+        self.web_name_entry = ctk.CTkEntry(form_frame, placeholder_text="Website Name (e.g. GitHub)", width=300)
+        self.web_name_entry.grid(row=1, column=0, pady=10, padx=20)
+        
+        self.web_user_entry = ctk.CTkEntry(form_frame, placeholder_text="Username / Email", width=300)
+        self.web_user_entry.grid(row=2, column=0, pady=10, padx=20)
+        
+        self.web_pass_entry = ctk.CTkEntry(form_frame, placeholder_text="Password", show="*", width=300)
+        self.web_pass_entry.grid(row=3, column=0, pady=10, padx=20)
+        
+        self.web_note_entry = ctk.CTkEntry(form_frame, placeholder_text="Note (Optional)", width=300)
+        self.web_note_entry.grid(row=4, column=0, pady=10, padx=20)
+        
+        save_btn = ctk.CTkButton(form_frame, text="Save Password", command=self.save_web_password, width=300)
+        save_btn.grid(row=5, column=0, pady=(10, 20), padx=20)
+
+    def save_app_password(self):
+        app_name = self.app_name_entry.get().strip()
+        username = self.app_user_entry.get().strip()
+        password = self.app_pass_entry.get()
+        note = self.app_note_entry.get().strip()
+        
+        if not app_name or not username or not password:
+            messagebox.showerror("Error", "App Name, Username and Password are required")
+            return
+            
+        success = self.db.add_app_password(self.current_user['id'], app_name, username, password, note, self.current_user['key'])
+        if success:
+            messagebox.showinfo("Success", "Password saved successfully!")
+            self.show_main_dashboard()
+        else:
+            messagebox.showerror("Error", "Failed to save password")
+
+    def save_web_password(self):
+        url = self.web_url_entry.get().strip()
+        name = self.web_name_entry.get().strip()
+        username = self.web_user_entry.get().strip()
+        password = self.web_pass_entry.get()
+        note = self.web_note_entry.get().strip()
+        
+        if not url or not name or not username or not password:
+            messagebox.showerror("Error", "URL, Name, Username and Password are required")
+            return
+            
+        success = self.db.add_web_password(self.current_user['id'], url, name, username, password, note, self.current_user['key'])
+        if success:
+            messagebox.showinfo("Success", "Password saved successfully!")
+            self.show_main_dashboard()
+        else:
+            messagebox.showerror("Error", "Failed to save password")
+
+    def get_all_connected_profiles(self):
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    config = json.load(f)
+                    return config.get("browser_profiles", {})
+            except Exception:
+                pass
+        return {}
+
+    def show_browser_integrations_page(self):
+        self.clear_frame()
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkButton(self.main_frame, text="← Back", width=80, command=self.show_main_dashboard).grid(row=0, column=0, sticky="w", padx=20, pady=20)
+        
+        header_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        header_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 20))
+        header_frame.grid_columnconfigure(0, weight=1)
+        header_frame.grid_columnconfigure(1, weight=0)
+        
+        connected_profiles = self.get_all_connected_profiles()
+        count = len(connected_profiles)
+        
+        title_text = f"Browser Integrations ({count} Connected)" if count > 0 else "Browser Integrations"
+        title = ctk.CTkLabel(header_frame, text=title_text, font=ctk.CTkFont(family="Helvetica", size=24, weight="bold"))
+        title.grid(row=0, column=0, sticky="w")
+        
+        add_btn = ctk.CTkButton(header_frame, text="Add +", width=80, fg_color="#10A37F", hover_color="#0e906f", font=ctk.CTkFont(weight="bold"), command=self.show_add_integration_modal)
+        add_btn.grid(row=0, column=1, sticky="e")
+        
+        if count == 0:
+            empty_lbl = ctk.CTkLabel(self.main_frame, text="No browsers connected yet.\nClick 'Add +' to get started.", font=ctk.CTkFont(size=14), text_color="gray")
+            empty_lbl.grid(row=2, column=0, pady=50)
+            return
+
+        row_idx = 2
+        for browser, profile_name in connected_profiles.items():
+            frame = ctk.CTkFrame(self.main_frame, width=500, corner_radius=12)
+            frame.grid(row=row_idx, column=0, pady=10, padx=20)
+            frame.grid_columnconfigure(0, weight=1)
+            frame.grid_columnconfigure(1, weight=0)
+            
+            lbl = ctk.CTkLabel(frame, text=f"{browser} Browser", font=ctk.CTkFont(family="Helvetica", size=18, weight="bold"))
+            lbl.grid(row=0, column=0, sticky="w", padx=20, pady=(20, 5))
+            
+            sub_frame = ctk.CTkFrame(frame, fg_color="transparent")
+            sub_frame.grid(row=1, column=0, sticky="w", padx=20, pady=(0, 20))
+            
+            sub_lbl = ctk.CTkLabel(sub_frame, text=f"Profile: {profile_name}", font=ctk.CTkFont(size=12), text_color="#10A37F")
+            sub_lbl.grid(row=0, column=0, sticky="w")
+            
+            def make_edit_cmd(b=browser):
+                def cmd():
+                    new_name = ctk.CTkInputDialog(text=f"Enter a Profile Name for {b}:", title="Edit Profile Name").get_input()
+                    if new_name is not None:
+                        if new_name.strip() == "":
+                            self.delete_browser_profile(b)
+                        else:
+                            self.save_browser_profile(b, new_name.strip())
+                        self.show_browser_integrations_page()
+                return cmd
+                
+            edit_btn = ctk.CTkButton(sub_frame, text="✎ Edit Name", width=70, height=20, font=ctk.CTkFont(size=10), fg_color="transparent", text_color="gray", border_width=1, command=make_edit_cmd())
+            edit_btn.grid(row=0, column=1, padx=(10, 0))
+            
+            def make_disconnect_cmd(b=browser):
+                def cmd():
+                    uninstall_for_browser(b)
+                    self.delete_browser_profile(b)
+                    self.show_browser_integrations_page()
+                return cmd
+                
+            btn = ctk.CTkButton(frame, text="Disconnect", command=make_disconnect_cmd(), fg_color="transparent", text_color="#E74C3C", border_width=1, border_color="#E74C3C", hover_color="#FDEDEC", width=120, corner_radius=8)
+            btn.grid(row=0, column=1, rowspan=2, sticky="e", padx=20, pady=20)
+                
+            row_idx += 1
+
+    def show_add_integration_modal(self):
+        top = ctk.CTkToplevel(self)
+        top.title("Add Browser Integration")
+        top.geometry("450x380")
+        top.attributes('-topmost', True)
+        # Delay the grab_set to ensure the window is fully rendered on Linux/Wayland
+        top.after(100, top.grab_set)
+        
+        lbl = ctk.CTkLabel(top, text="Connect a Browser", font=ctk.CTkFont(size=20, weight="bold"))
+        lbl.pack(pady=(20, 10))
+        
+        browser_lbl = ctk.CTkLabel(top, text="1. Select Browser:", font=ctk.CTkFont(size=12))
+        browser_lbl.pack(anchor="w", padx=40, pady=(10, 0))
+        
+        all_supported = ["Firefox", "Chrome", "Brave", "Chromium", "Edge"]
+        installed_browsers = ["Select..."] + [b for b in all_supported if len(browser_profiles.get_profiles_for_browser(b)) > 0]
+        
+        if len(installed_browsers) == 1:
+            installed_browsers = ["Select...", "No browsers found"]
+            
+        browser_var = ctk.StringVar(value="Select...")
+        browser_dropdown = ctk.CTkOptionMenu(top, values=installed_browsers, variable=browser_var, width=320)
+        browser_dropdown.pack(pady=(5, 10))
+        
+        profile_lbl = ctk.CTkLabel(top, text="2. Select Profile:", font=ctk.CTkFont(size=12))
+        profile_lbl.pack(anchor="w", padx=40, pady=(10, 0))
+        
+        profile_var = ctk.StringVar(value="")
+        profile_dropdown = ctk.CTkOptionMenu(top, values=["Select a browser first"], variable=profile_var, width=320, state="disabled")
+        profile_dropdown.pack(pady=(5, 10))
+        
+        def on_browser_select(*args):
+            b = browser_var.get()
+            if b != "Select..." and b != "No browsers found":
+                profiles = browser_profiles.get_profiles_for_browser(b)
+                profile_dropdown.configure(state="normal", values=profiles)
+                if profiles:
+                    profile_var.set(profiles[0])
+            else:
+                profile_dropdown.configure(state="disabled", values=["Select a browser first"])
+                profile_var.set("Select a browser first")
+        browser_var.trace_add("write", on_browser_select)
+        
+        def do_connect():
+            browser = browser_var.get()
+            profile = profile_var.get()
+            
+            if browser == "Select...":
+                messagebox.showerror("Error", "Please select a browser.", parent=top)
+                return
+                
+            if browser == "Firefox":
+                success, msg = install_for_browser(browser)
+            else:
+                ext_id = ctk.CTkInputDialog(text=f"Enter {browser} Extension ID (from extensions page):", title="Connect").get_input()
+                if not ext_id:
+                    return
+                success, msg = install_for_browser(browser, ext_id)
+                
+            if success:
+                self.save_browser_profile(browser, profile)
+                messagebox.showinfo("Success", msg, parent=top)
+                top.destroy()
+                self.show_browser_integrations_page()
+            else:
+                messagebox.showerror("Error", msg, parent=top)
+                
+        btn = ctk.CTkButton(top, text="Connect Browser", width=200, height=40, fg_color="#10A37F", hover_color="#0e906f", font=ctk.CTkFont(weight="bold", size=14), command=do_connect)
+        btn.pack(pady=30)
+
+    def export_backup(self):
+        password = ctk.CTkInputDialog(text="Enter a strong Backup Password:", title="Export Backup").get_input()
+        if not password:
+            return
+            
+        file_path = filedialog.asksaveasfilename(defaultextension=".vaultmate_backup", filetypes=[("VaultMate Backup", "*.vaultmate_backup")])
+        if not file_path:
+            return
+            
+        try:
+            salt = os.urandom(16)
+            key = derive_key(password, salt)
+            from cryptography.fernet import Fernet
+            f = Fernet(key)
+            
+            with open("vaultmate.db", "rb") as db_file:
+                db_data = db_file.read()
+                
+            encrypted_data = f.encrypt(db_data)
+            
+            with open(file_path, "wb") as backup_file:
+                backup_file.write(salt + encrypted_data)
+                
+            messagebox.showinfo("Success", "Highly encrypted backup exported successfully!\nYou can safely save this file to Google Drive or Dropbox.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to export backup: {e}")
+
+    def import_backup(self):
+        if not messagebox.askyesno("Warning", "Importing a backup will OVERWRITE your current vault. Do you want to continue?"):
+            return
+            
+        file_path = filedialog.askopenfilename(filetypes=[("VaultMate Backup", "*.vaultmate_backup")])
+        if not file_path:
+            return
+            
+        password = ctk.CTkInputDialog(text="Enter the Backup Password:", title="Import Backup").get_input()
+        if not password:
+            return
+            
+        try:
+            with open(file_path, "rb") as backup_file:
+                content = backup_file.read()
+                
+            if len(content) < 16:
+                raise ValueError("Invalid backup file")
+                
+            salt = content[:16]
+            encrypted_data = content[16:]
+            
+            key = derive_key(password, salt)
+            from cryptography.fernet import Fernet
+            f = Fernet(key)
+            
+            decrypted_data = f.decrypt(encrypted_data)
+            
+            self.db.conn.close()
+            
+            with open("vaultmate.db", "wb") as db_file:
+                db_file.write(decrypted_data)
+                
+            messagebox.showinfo("Success", "Backup restored successfully! The application will now close. Please restart it.")
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to import backup. Incorrect password or corrupted file.")
+            self.db = Database()
+
+if __name__ == "__main__":
+    app = PasswordManager()
+    app.mainloop()
