@@ -81,9 +81,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ── Install WiX Toolset v3 ─────────────────────────────────────────────
+      # ── Ensure WiX Toolset v3 is available ────────────────────────────────
       - name: Install WiX Toolset v3
-        run: choco install wixtoolset -y --no-progress --version 3.14.1
+        shell: pwsh
+        run: |
+          # Use already-installed version if present, otherwise install latest
+          $wix = Get-ChildItem "C:\Program Files (x86)\WiX Toolset*" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($wix) {
+            Write-Host "✅ WiX already installed at $($wix.FullName)"
+          } else {
+            choco install wixtoolset -y --no-progress
+          }
 
       # ── Convert plain-text LICENSE → LICENSE.rtf (WiX requires RTF) ────────
       - name: Convert LICENSE to RTF
@@ -104,7 +112,10 @@ jobs:
         run: |
           $ver = $env:VAULTMATE_VERSION -replace '^v',''
           $env:VAULTMATE_VERSION = $ver
-          $bin = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
+          # Find WiX bin dynamically (handles any installed patch version)
+          $wixDir = Get-ChildItem "C:\Program Files (x86)\WiX Toolset*" | Select-Object -First 1
+          $bin = Join-Path $wixDir.FullName "bin"
+          Write-Host "Using WiX at: $bin"
 
           # Compile .wxs → .wixobj
           & "$bin\candle.exe" -nologo -arch x64 `
