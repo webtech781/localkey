@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     statusBadge.className = "badge status-locked";
     statusPulse.className = "pulse-dot pulse-yellow";
     connectionTitle.textContent = "Connecting...";
-    connectionDesc.textContent = "Querying VaultMate connection status...";
+    connectionDesc.textContent = "Querying LocalKey connection status...";
     userWrapper.classList.add('hidden');
 
     chrome.runtime.sendMessage({ action: "ping" }, (response) => {
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusPulse.className = "pulse-dot pulse-red";
         connectionTitle.textContent = "Disconnected";
         connectionDesc.textContent = response && response.error 
-          ? "Ensure VaultMate desktop app is running." 
+          ? "Ensure LocalKey desktop app is running." 
           : "Could not establish connection to the desktop application.";
         userWrapper.classList.add('hidden');
       } else {
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
           statusBadge.className = "badge status-locked";
           statusPulse.className = "pulse-dot pulse-yellow";
           connectionTitle.textContent = "Vault Locked";
-          connectionDesc.textContent = "Please log in to the VaultMate desktop application to unlock.";
+          connectionDesc.textContent = "Please log in to the LocalKey desktop application to unlock.";
           userWrapper.classList.add('hidden');
         }
       }

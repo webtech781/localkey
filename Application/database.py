@@ -4,7 +4,7 @@ import bcrypt
 from crypto_utils import derive_key, encrypt_data, decrypt_data
 
 class Database:
-    def __init__(self, db_path="vaultmate.db"):
+    def __init__(self, db_path="localkey.db"):
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self.create_tables()

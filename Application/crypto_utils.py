@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.fernet import Fernet
 
-SERVICE_NAME = "VaultMateGUI"
+SERVICE_NAME = "LocalKey"
 
 def derive_key(password: str, salt: bytes) -> bytes:
     """Derives a secure cryptographic key from a password and a salt."""

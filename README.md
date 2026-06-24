@@ -1,16 +1,16 @@
-# 🔐 VaultMate — Password & Passkey Manager
+# 🔐 LocalKey — Password & Passkey Manager
 
 > **Offline-first. Encrypted. Browser-integrated. No cloud. No hardware required.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/webtech781/vaultmate-gui?style=for-the-badge&logo=github&color=007AFF)](https://github.com/webtech781/vaultmate-gui/releases/latest)
-[![Linux](https://img.shields.io/badge/Linux-x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/webtech781/vaultmate-gui/releases/latest)
-[![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/webtech781/vaultmate-gui/releases/latest)
-[![macOS](https://img.shields.io/badge/macOS-12%2B-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/webtech781/vaultmate-gui/releases/latest)
-[![Firefox](https://img.shields.io/badge/Firefox-Fully%20Tested%20✅-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://github.com/webtech781/vaultmate-gui/tree/main/extension-firefox)
+[![GitHub Release](https://img.shields.io/github/v/release/webtech781/localkey?style=for-the-badge&logo=github&color=007AFF)](https://github.com/webtech781/localkey/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-x86__64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/webtech781/localkey/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/webtech781/localkey/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-12%2B-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/webtech781/localkey/releases/latest)
+[![Firefox](https://img.shields.io/badge/Firefox-Fully%20Tested%20✅-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://github.com/webtech781/localkey/tree/main/extension-firefox)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![Download on SourceForge](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/vaultmate-gui/files/latest/download)
+[![Download on SourceForge](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/localkey/files/latest/download)
 
-VaultMate is a powerful, open-source password manager and **software passkey authenticator** that runs entirely on your local machine. It pairs a Python desktop GUI with a browser extension, giving you secure credential autofill and passkey interception directly in your browser — without ever sending your data anywhere.
+LocalKey is a powerful, open-source password manager and **software passkey authenticator** that runs entirely on your local machine. It pairs a Python desktop GUI with a browser extension, giving you secure credential autofill and passkey interception directly in your browser — without ever sending your data anywhere.
 
 ---
 
@@ -20,30 +20,30 @@ VaultMate is a powerful, open-source password manager and **software passkey aut
 
 ### 🪟 Windows — One-Click Installer
 
-**[⬇️ Download VaultMate-Setup-windows.exe](https://github.com/webtech781/vaultmate-gui/releases/latest/download/VaultMate-Setup-v1.3.0-windows.exe)**
+**[⬇️ Download LocalKey-Setup-windows.exe](https://github.com/webtech781/localkey/releases/latest/download/LocalKey-Setup-v1.3.0-windows.exe)**
 
-1. Download `VaultMate-Setup-*.exe`
+1. Download `LocalKey-Setup-*.exe`
 2. Run it — click **Next → Install → Finish**
-3. VaultMate appears on your **Desktop** and **Start Menu** automatically
+3. LocalKey appears on your **Desktop** and **Start Menu** automatically
 
 > Installs to `Program Files`, adds to Add/Remove Programs, creates shortcuts.
 
 ### 🍎 macOS — DMG Package
 
-**[⬇️ Download VaultMate-macOS.dmg](https://github.com/webtech781/vaultmate-gui/releases/latest)**
+**[⬇️ Download LocalKey-macOS.dmg](https://github.com/webtech781/localkey/releases/latest)**
 
-1. Download `VaultMate-*-macOS-*.dmg`
+1. Download `LocalKey-*-macOS-*.dmg`
 2. Open the `.dmg` file
-3. **Drag VaultMate → Applications** (single drag-and-drop, done!)
+3. **Drag LocalKey → Applications** (single drag-and-drop, done!)
 4. First launch: **Right-click → Open** (bypasses Gatekeeper on unnotarized builds)
 
 ### 🐧 Linux — Portable Bundle
 
-**[⬇️ Download VaultMate-linux-x86_64.tar.gz](https://github.com/webtech781/vaultmate-gui/releases/latest)**
+**[⬇️ Download LocalKey-linux-x86_64.tar.gz](https://github.com/webtech781/localkey/releases/latest)**
 
 ```bash
-tar -xzf VaultMate-*-linux-x86_64.tar.gz
-cd VaultMate && ./VaultMate
+tar -xzf LocalKey-*-linux-x86_64.tar.gz
+cd LocalKey && ./LocalKey
 ```
 
 > **If the app doesn't launch**, install the Tk system library first:
@@ -59,10 +59,10 @@ cd VaultMate && ./VaultMate
 
 > [!IMPORTANT]
 > Fully tested, verified, and officially approved on Mozilla Firefox.
-> Firefox is the recommended browser for the best VaultMate experience.
+> Firefox is the recommended browser for the best LocalKey experience.
 
 🦊 Firefox (Recommended — Official Add-on Store ✅)
-1. Install the official production version directly from the [Mozilla Add-ons Store (AMO)](https://addons.mozilla.org/addon/vaultmate-passkey-combo/).
+1. Install the official production version directly from the [Mozilla Add-ons Store (AMO)](https://addons.mozilla.org/addon/localkey-passkey-manager/).
 2. Click **"Add to Firefox"** to install it permanently. 
 
 *For Extension Developers / Manual Testing:*
@@ -70,13 +70,13 @@ cd VaultMate && ./VaultMate
 2. Open Firefox → `about:debugging#/runtime/this-firefox`
 3. Click **"Load Temporary Add-on…"**
 4. Navigate to `extension-firefox/` and select `manifest.json`
-5. The VaultMate 🔐 icon will appear in your toolbar
+5. The LocalKey 🔐 icon will appear in your toolbar
 
 > [!TIP]
 > For a permanent install (survives browser restarts), package the extension:
 > ```bash
 > cd extension-firefox
-> zip -r VaultMate-firefox.xpi .
+> zip -r LocalKey-firefox.xpi .
 > ```
 > Then install via `about:addons` → ⚙️ → "Install Add-on From File"
 
@@ -93,13 +93,13 @@ cd VaultMate && ./VaultMate
 
 After loading the extension in your browser:
 
-1. Open **VaultMate** and log in
+1. Open **LocalKey** and log in
 2. Click **"Browser Integrations"** in the sidebar
 3. Click **"Add +"**, select your browser
 4. For **Chrome/Brave/Edge**: paste the Extension ID you copied
-5. Click **"Install"** — VaultMate auto-registers the Native Messaging Host
+5. Click **"Install"** — LocalKey auto-registers the Native Messaging Host
 
-> VaultMate will now intercept login forms and passkey prompts in your browser.
+> LocalKey will now intercept login forms and passkey prompts in your browser.
 
 ---
 
@@ -108,9 +108,9 @@ After loading the extension in your browser:
 > [!NOTE]
 > ### 💡 No Hardware? No Problem.
 >
-> Most passkey solutions require a hardware security key (YubiKey, FIDO2 token) or a platform authenticator (Apple Touch ID, Windows Hello). **VaultMate eliminates this requirement entirely.**
+> Most passkey solutions require a hardware security key (YubiKey, FIDO2 token) or a platform authenticator (Apple Touch ID, Windows Hello). **LocalKey eliminates this requirement entirely.**
 >
-> VaultMate implements passkeys **100% in software**, meaning:
+> LocalKey implements passkeys **100% in software**, meaning:
 > - ✅ Works on any Linux machine, even without a fingerprint reader
 > - ✅ Works on virtual machines and cloud desktops
 > - ✅ Works on older hardware with no biometric sensor
@@ -126,9 +126,9 @@ After loading the extension in your browser:
 > [!IMPORTANT]
 > ### Bypass the "Touch Your Security Key" Wall
 >
-> When you encounter a dialog like **"Touch your security key to continue"** on a site like GitHub, the browser is waiting for hardware that may not exist on your machine. This is the exact scenario VaultMate was built to solve.
+> When you encounter a dialog like **"Touch your security key to continue"** on a site like GitHub, the browser is waiting for hardware that may not exist on your machine. This is the exact scenario LocalKey was built to solve.
 >
-> **VaultMate intercepts the WebAuthn flow at the JavaScript level** and substitutes its own software-based passkey authenticator. The website receives a valid, cryptographically signed WebAuthn response — it never knows the difference.
+> **LocalKey intercepts the WebAuthn flow at the JavaScript level** and substitutes its own software-based passkey authenticator. The website receives a valid, cryptographically signed WebAuthn response — it never knows the difference.
 >
 > **Perfect for:**
 > - 🐧 Linux desktops without fingerprint readers
@@ -142,7 +142,7 @@ After loading the extension in your browser:
 ## 📁 Project Structure
 
 ```
-vaultmate-gui/
+localkey/
 ├── Application/               # Core desktop app (Python + CustomTkinter)
 │   ├── main.py                # Main GUI application
 │   ├── native_host.py         # Native messaging backend (handles WebAuthn)
@@ -151,7 +151,7 @@ vaultmate-gui/
 │   ├── crypto_utils.py        # Encryption & PBKDF2 key derivation
 │   ├── browser_profiles.py    # Auto-detects installed browsers & profiles
 │   ├── extension_installer.py # Registers the native host automatically
-│   ├── vaultmate.spec         # PyInstaller build spec (all platforms)
+│   ├── localkey.spec         # PyInstaller build spec (all platforms)
 │   ├── build_linux.sh         # Linux build script → .tar.gz
 │   ├── build_macos.sh         # macOS build script → .dmg
 │   ├── build_windows.bat      # Windows build script → .zip
@@ -185,8 +185,8 @@ If you want to build the executables yourself:
 
 ```bash
 # Clone the repo
-git clone https://github.com/webtech781/vaultmate-gui.git
-cd vaultmate-gui/Application
+git clone https://github.com/webtech781/localkey.git
+cd localkey/Application
 
 # Linux
 bash build_linux.sh

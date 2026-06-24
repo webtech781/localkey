@@ -5,7 +5,7 @@ import platform
 import stat
 import shutil
 
-HOST_NAME = "com.vaultmate.passkey"
+HOST_NAME = "com.localkey.passkey"
 FIREFOX_EXT_ID = "vaultmate@local.dev"
 
 def get_browser_dirs(browser_name):
@@ -45,14 +45,39 @@ def get_browser_dirs(browser_name):
 
 def install_for_browser(browser_name, extension_id=""):
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    native_host_path = os.path.join(current_dir, "native_host.py")
+    os_name = platform.system()
     
-    if not os.path.exists(native_host_path):
-        return False, f"Could not find native_host.py at {native_host_path}"
+    # Detect if running from the compiled PyInstaller package.
+    # When packaged, the py files are inside _internal/ and __file__ is inside _internal/.
+    # The native host executable (localkey_native_host or localkey_native_host.exe) will be in the parent directory.
+    exe_ext = ".exe" if os_name == "Windows" else ""
+    binary_name = f"localkey_native_host{exe_ext}"
+    
+    parent_dir = os.path.dirname(current_dir)
+    bundled_binary_path = os.path.join(parent_dir, binary_name)
+    local_binary_path = os.path.join(current_dir, binary_name)
+    
+    # For macOS app bundle layout (Contents/MacOS/localkey_native_host relative to Contents/Resources/_internal/)
+    macos_binary_path = os.path.join(os.path.dirname(parent_dir), "MacOS", binary_name)
+    
+    is_binary = False
+    if os.path.exists(bundled_binary_path):
+        native_host_path = bundled_binary_path
+        is_binary = True
+    elif os.path.exists(macos_binary_path):
+        native_host_path = macos_binary_path
+        is_binary = True
+    elif os.path.exists(local_binary_path):
+        native_host_path = local_binary_path
+        is_binary = True
+    else:
+        native_host_path = os.path.join(current_dir, "native_host.py")
+        if not os.path.exists(native_host_path):
+            return False, f"Could not find native_host.py or localkey_native_host at {current_dir}"
 
     manifest = {
         "name": HOST_NAME,
-        "description": "VaultMate Passkey Native Host",
+        "description": "LocalKey Passkey Native Host",
         "path": native_host_path,
         "type": "stdio"
     }
@@ -61,19 +86,17 @@ def install_for_browser(browser_name, extension_id=""):
         manifest["allowed_extensions"] = [FIREFOX_EXT_ID]
     else:
         manifest["allowed_origins"] = [f"chrome-extension://{extension_id}/" if extension_id else "chrome-extension://placeholder/"]
-
-    os_name = platform.system()
     
     try:
         if os_name == "Windows":
-            bat_path = os.path.join(current_dir, "native_host.bat")
-            if not os.path.exists(bat_path):
-                with open(bat_path, "w") as f:
-                    f.write(f'@echo off\r\npython "{native_host_path}" %*')
+            if not is_binary:
+                bat_path = os.path.join(current_dir, "native_host.bat")
+                if not os.path.exists(bat_path):
+                    with open(bat_path, "w") as f:
+                        f.write(f'@echo off\r\npython "{native_host_path}" %*')
+                manifest["path"] = bat_path
             
-            manifest["path"] = bat_path
             manifest_path = os.path.join(current_dir, f"{HOST_NAME}_{browser_name.lower()}.json")
-            
             with open(manifest_path, "w") as f:
                 json.dump(manifest, f, indent=4)
                 
@@ -86,33 +109,32 @@ def install_for_browser(browser_name, extension_id=""):
             return True, f"Successfully connected to {browser_name}"
 
         else:
-            st = os.stat(native_host_path)
-            os.chmod(native_host_path, st.st_mode | stat.S_IEXEC)
-            
-            if os_name == "Linux":
-                import subprocess
-                flatpak_ids = {
-                    "Firefox": "org.mozilla.firefox",
-                    "Chrome": "com.google.Chrome",
-                    "Chromium": "org.chromium.Chromium",
-                    "Brave": "com.brave.Browser",
-                    "Edge": "com.microsoft.Edge"
-                }
-                if browser_name in flatpak_ids:
-                    app_id = flatpak_ids[browser_name]
-                    # Grant permission for the Flatpak browser to execute the host wrapper script and read the directory
-                    try:
-                        subprocess.run(["flatpak", "override", "--user", "--talk-name=org.freedesktop.Flatpak", f"--filesystem={current_dir}", app_id], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    except Exception:
-                        pass
-                        
-                sh_path = os.path.join(current_dir, "native_host.sh")
-                # Prefer the venv Python so all packages (cryptography, etc.) are available
-                venv_python = os.path.join(current_dir, ".venv", "bin", "python3")
-                python_exe = venv_python if os.path.exists(venv_python) else sys.executable
-                with open(sh_path, "w") as f:
-                    f.write(f'''#!/bin/bash
-# VaultMate Native Host Wrapper - uses venv Python with all required packages
+            if not is_binary:
+                st = os.stat(native_host_path)
+                os.chmod(native_host_path, st.st_mode | stat.S_IEXEC)
+                
+                if os_name == "Linux":
+                    import subprocess
+                    flatpak_ids = {
+                        "Firefox": "org.mozilla.firefox",
+                        "Chrome": "com.google.Chrome",
+                        "Chromium": "org.chromium.Chromium",
+                        "Brave": "com.brave.Browser",
+                        "Edge": "com.microsoft.Edge"
+                    }
+                    if browser_name in flatpak_ids:
+                        app_id = flatpak_ids[browser_name]
+                        try:
+                            subprocess.run(["flatpak", "override", "--user", "--talk-name=org.freedesktop.Flatpak", f"--filesystem={current_dir}", app_id], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        except Exception:
+                            pass
+                            
+                    sh_path = os.path.join(current_dir, "native_host.sh")
+                    venv_python = os.path.join(current_dir, ".venv", "bin", "python3")
+                    python_exe = venv_python if os.path.exists(venv_python) else sys.executable
+                    with open(sh_path, "w") as f:
+                        f.write(f'''#!/bin/bash
+# LocalKey Native Host Wrapper - uses venv Python with all required packages
 VENV_PYTHON="{python_exe}"
 NATIVE_HOST="{native_host_path}"
 if [ -f /.flatpak-info ]; then
@@ -121,8 +143,14 @@ else
     exec "$VENV_PYTHON" "$NATIVE_HOST" "$@"
 fi
 ''')
-                os.chmod(sh_path, st.st_mode | stat.S_IEXEC)
-                manifest["path"] = sh_path
+                    os.chmod(sh_path, st.st_mode | stat.S_IEXEC)
+                    manifest["path"] = sh_path
+            else:
+                try:
+                    st = os.stat(native_host_path)
+                    os.chmod(native_host_path, st.st_mode | stat.S_IEXEC)
+                except Exception:
+                    pass
             
             target_dirs = get_browser_dirs(browser_name)
             if not isinstance(target_dirs, list):

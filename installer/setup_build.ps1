@@ -1,7 +1,7 @@
 # =============================================================================
-# VaultMate MSI Setup Helper
+# LocalKey MSI Setup Helper
 # Bundled inside the .msi and called by a deferred Custom Action.
-# CustomActionData format: "INSTALLDIR=C:\VaultMate;DESKTOP=1"
+# CustomActionData format: "INSTALLDIR=C:\LocalKey;DESKTOP=1"
 # =============================================================================
 param()
 
@@ -9,8 +9,8 @@ $ErrorActionPreference = "Continue"
 $global:SetupError = $null
 
 # ── Parse CustomActionData passed by MSI ─────────────────────────────────────
-$raw = $env:VAULTMATE_CA_DATA   # set by the immediate CA via env var trick
-if (-not $raw) { $raw = "INSTALLDIR=C:\VaultMate;DESKTOP=1" }
+$raw = $env:LOCALKEY_CA_DATA   # set by the immediate CA via env var trick
+if (-not $raw) { $raw = "INSTALLDIR=C:\LocalKey;DESKTOP=1" }
 
 $data = @{}
 foreach ($pair in $raw -split ";") {
@@ -21,9 +21,9 @@ foreach ($pair in $raw -split ";") {
 $InstallDir   = $data["INSTALLDIR"]
 $WantDesktop  = $data["DESKTOP"]
 
-if (-not $InstallDir) { $InstallDir = "C:\VaultMate" }
+if (-not $InstallDir) { $InstallDir = "C:\LocalKey" }
 
-$logFile = "$env:TEMP\vaultmate_setup.log"
+$logFile = "$env:TEMP\localkey_setup.log"
 function Log($msg) {
     $ts = (Get-Date).ToString("HH:mm:ss")
     "$ts  $msg" | Tee-Object -FilePath $logFile -Append | Out-Null
@@ -31,7 +31,7 @@ function Log($msg) {
 }
 
 try {
-Log "=== VaultMate Setup Helper Started ==="
+Log "=== LocalKey Setup Helper Started ==="
 Log "InstallDir : $InstallDir"
 Log "Desktop    : $WantDesktop"
 
@@ -58,12 +58,12 @@ if (-not $pythonOk) {
     Log "Python installed."
 }
 
-# ── 2. Download VaultMate source from GitHub ──────────────────────────────────
-$zipUrl   = "https://github.com/webtech781/vaultmate-gui/archive/refs/heads/main.zip"
-$zipPath  = "$env:TEMP\vaultmate-src.zip"
-$exPath   = "$env:TEMP\vaultmate-extract"
+# ── 2. Download LocalKey source from GitHub ──────────────────────────────────
+$zipUrl   = "https://github.com/webtech781/localkey/archive/refs/heads/main.zip"
+$zipPath  = "$env:TEMP\localkey-src.zip"
+$exPath   = "$env:TEMP\localkey-extract"
 
-Log "Downloading VaultMate source from GitHub..."
+Log "Downloading LocalKey source from GitHub..."
 Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
 Log "Download complete."
 
@@ -80,7 +80,7 @@ Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
 Remove-Item $exPath  -Recurse -Force -ErrorAction SilentlyContinue
 Log "Source placed at $InstallDir"
 
-# ── 4. Build VaultMate ────────────────────────────────────────────────────────
+# ── 4. Build LocalKey ────────────────────────────────────────────────────────
 $buildBat = Join-Path $InstallDir "Application\build_windows.bat"
 if (-not (Test-Path $buildBat)) { throw "build_windows.bat not found at $buildBat" }
 
@@ -94,22 +94,22 @@ if ($proc.ExitCode -ne 0) { throw "Build failed (exit $($proc.ExitCode)). See $l
 Log "Build complete."
 
 # ── 5. Desktop shortcut (if requested) ───────────────────────────────────────
-$exePath = Join-Path $InstallDir "Application\dist\VaultMate\VaultMate.exe"
+$exePath = Join-Path $InstallDir "Application\dist\LocalKey\LocalKey.exe"
 if ($WantDesktop -eq "1" -and (Test-Path $exePath)) {
     # CA runs as SYSTEM — $env:USERPROFILE would point to SYSTEM's profile,
     # not the real user's Desktop. Use the Public Desktop instead (visible to all users).
     $desktopPath = [Environment]::GetFolderPath('CommonDesktopDirectory')
     $shell    = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut("$desktopPath\VaultMate.lnk")
+    $shortcut = $shell.CreateShortcut("$desktopPath\LocalKey.lnk")
     $shortcut.TargetPath       = $exePath
     $shortcut.WorkingDirectory = Split-Path $exePath
     $shortcut.IconLocation     = $exePath
-    $shortcut.Description      = "VaultMate Password Manager"
+    $shortcut.Description      = "LocalKey Password Manager"
     $shortcut.Save()
-    Log "Desktop shortcut created at $desktopPath\VaultMate.lnk"
+    Log "Desktop shortcut created at $desktopPath\LocalKey.lnk"
 }
 
-Log "=== VaultMate Setup Helper Finished ==="
+Log "=== LocalKey Setup Helper Finished ==="
 } catch {
     $global:SetupError = $_.Exception.Message
     Log "ERROR: $global:SetupError"

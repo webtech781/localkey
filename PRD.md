@@ -1,7 +1,7 @@
-# Product Requirements Document (PRD): VaultMate
+# Product Requirements Document (PRD): LocalKey
 
 ## 1. Product Vision
-VaultMate is a secure, offline-first, locally-hosted password and passkey manager designed for privacy-conscious users. It features a modern desktop GUI and a companion browser extension. Unlike cloud-based password managers (e.g., Bitwarden, 1Password, LastPass), VaultMate adheres to a strict Zero-Knowledge and Zero-Cloud architecture. All credentials, including WebAuthn passkeys, are stored exclusively on the user's local machine in an encrypted database.
+LocalKey is a secure, offline-first, locally-hosted password and passkey manager designed for privacy-conscious users. It features a modern desktop GUI and a companion browser extension. Unlike cloud-based password managers (e.g., Bitwarden, 1Password, LastPass), LocalKey adheres to a strict Zero-Knowledge and Zero-Cloud architecture. All credentials, including WebAuthn passkeys, are stored exclusively on the user's local machine in an encrypted database.
 
 ## 2. Target Audience
 - **Privacy Advocates:** Users who refuse to store their passwords or private cryptographic passkeys on third-party cloud servers.
@@ -11,7 +11,7 @@ VaultMate is a secure, offline-first, locally-hosted password and passkey manage
 ## 3. Core Features
 
 ### 3.1 Secure Local Storage (Zero-Knowledge Architecture)
-- **Database:** Local SQLite database (`vaultmate.db`).
+- **Database:** Local SQLite database (`localkey.db`).
 - **Encryption:** All sensitive fields (passwords, cryptographic private keys, public keys) are symmetrically encrypted at rest using `cryptography.fernet`.
 - **Key Derivation:** The AES encryption key is derived locally and ephemerally from the user's Master Password using PBKDF2 (100,000 iterations). 
 - **No Cloud Sync:** The software contains absolutely no telemetry, analytics, or network-sync capabilities.
@@ -41,7 +41,7 @@ graph TD
     B -->|window.postMessage| C(bridge.js - ISOLATED World)
     C -->|chrome.runtime.sendMessage| D(background.js - Service Worker)
     D -->|Native Messaging JSON via stdio| E(native_host.py - Python script)
-    E -->|SQLite queries| F[(vaultmate.db)]
+    E -->|SQLite queries| F[(localkey.db)]
     G[main.py - CustomTkinter GUI] -->|SQLite queries| F
 ```
 

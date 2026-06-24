@@ -79,7 +79,7 @@ def choose_passkey_gui(saved_keys, rp_id):
     logo_label.bind("<Button-1>", start_drag)
     logo_label.bind("<B1-Motion>", drag)
     
-    title_label = tk.Label(title_bar, text="VaultMate", font=("Segoe UI", 12, "bold"), bg=bg_color, fg=fg_color)
+    title_label = tk.Label(title_bar, text="LocalKey", font=("Segoe UI", 12, "bold"), bg=bg_color, fg=fg_color)
     title_label.pack(side="left")
     title_label.bind("<Button-1>", start_drag)
     title_label.bind("<B1-Motion>", drag)
@@ -151,7 +151,7 @@ def choose_passkey_gui(saved_keys, rp_id):
     
     return selected_key[0]
 
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vaultmate_config.json")
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "localkey_config.json")
 
 def get_message():
     raw_length = sys.stdin.buffer.read(4)
@@ -180,7 +180,7 @@ def get_active_user():
             if not password:
                 return None
                 
-            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vaultmate.db")
+            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "localkey.db")
             db = Database(db_path)
             user = db.login(username, password)
             if not user:
@@ -213,7 +213,7 @@ def main():
                 
             auth = get_active_user()
             if not auth:
-                send_message({"error": "VaultMate is locked or not configured for OS Auto-Login."})
+                send_message({"error": "LocalKey is locked or not configured for OS Auto-Login."})
                 continue
                 
             db, user = auth
@@ -284,7 +284,7 @@ def main():
                     root = tk.Tk()
                     root.withdraw()
                     root.attributes('-topmost', True)
-                    save = messagebox.askyesno("VaultMate - AutoSave", f"Do you want to save the new password for {name} ({username})?", parent=root)
+                    save = messagebox.askyesno("LocalKey - AutoSave", f"Do you want to save the new password for {name} ({username})?", parent=root)
                     if save:
                         db.add_web_password(user['id'], url, name, username, password, "", user['key'])
                     root.destroy()
@@ -292,7 +292,7 @@ def main():
                     root = tk.Tk()
                     root.withdraw()
                     root.attributes('-topmost', True)
-                    save = messagebox.askyesno("VaultMate - Update Password", f"Your password for {name} ({username}) has changed. Do you want to update it in VaultMate?", parent=root)
+                    save = messagebox.askyesno("LocalKey - Update Password", f"Your password for {name} ({username}) has changed. Do you want to update it in LocalKey?", parent=root)
                     if save:
                         db.update_web_password(update_pid, user['id'], url, name, username, password, "", user['key'])
                     root.destroy()
@@ -343,7 +343,7 @@ def main():
                 
                 # Vault is already unlocked via OS keyring in get_active_user().
                 # Just ask for user presence / authorization.
-                authorized = messagebox.askyesno("VaultMate - Passkey", 
+                authorized = messagebox.askyesno("LocalKey - Passkey", 
                                                  f"Create a Passkey for {rp_id} ({user_name})?\nClick Yes to authorize.", 
                                                  parent=root)
                 root.destroy()
@@ -435,7 +435,7 @@ def main():
                     root.withdraw()
                     root.attributes('-topmost', True)
                     
-                    authorized = messagebox.askyesno("VaultMate - Passkey", 
+                    authorized = messagebox.askyesno("LocalKey - Passkey", 
                                                      f"Use your Passkey to login to {rp_id}?\nClick Yes to authorize.", 
                                                      parent=root)
                     root.destroy()

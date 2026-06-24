@@ -11,7 +11,7 @@ script.onload = () => script.remove();
 window.addEventListener("message", (event) => {
     if (event.source !== window) return;
 
-    if (event.data && event.data.type === "VAULTMATE_PASSKEY_REQUEST") {
+    if (event.data && event.data.type === "LOCALKEY_PASSKEY_REQUEST") {
         const requestId = event.data.requestId;
         browser.runtime.sendMessage({
             action: "intercept_passkey",
@@ -19,9 +19,9 @@ window.addEventListener("message", (event) => {
             options: event.data.options,
             url: window.location.href
         }).then((response) => {
-            window.postMessage({ type: "VAULTMATE_PASSKEY_RESPONSE", requestId, response: response || { error: "No response from VaultMate host" } }, "*");
+            window.postMessage({ type: "LOCALKEY_PASSKEY_RESPONSE", requestId, response: response || { error: "No response from LocalKey host" } }, "*");
         }).catch((err) => {
-            window.postMessage({ type: "VAULTMATE_PASSKEY_RESPONSE", requestId, response: { error: err.message } }, "*");
+            window.postMessage({ type: "LOCALKEY_PASSKEY_RESPONSE", requestId, response: { error: err.message } }, "*");
         });
     }
 });
@@ -63,11 +63,11 @@ function removePickerEl() {
 }
 
 function createPickerStyles() {
-    if (document.getElementById('vaultmate-styles')) return;
+    if (document.getElementById('localkey-styles')) return;
     const style = document.createElement('style');
-    style.id = 'vaultmate-styles';
+    style.id = 'localkey-styles';
     style.textContent = `
-        #vaultmate-picker {
+        #localkey-picker {
             position: fixed;
             z-index: 2147483647;
             background: #1C1C1E;
@@ -84,21 +84,21 @@ function createPickerStyles() {
             from { opacity: 0; transform: translateY(-6px); }
             to   { opacity: 1; transform: translateY(0); }
         }
-        #vaultmate-picker .vm-header {
+        #localkey-picker .vm-header {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 10px 14px 8px;
             border-bottom: 1px solid #3A3A3C;
         }
-        #vaultmate-picker .vm-title {
+        #localkey-picker .vm-title {
             font-size: 12px;
             font-weight: 600;
             color: #8E8E93;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        #vaultmate-picker .vm-item {
+        #localkey-picker .vm-item {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -107,9 +107,9 @@ function createPickerStyles() {
             transition: background 0.1s;
             border-bottom: 1px solid #2C2C2E;
         }
-        #vaultmate-picker .vm-item:last-child { border-bottom: none; }
-        #vaultmate-picker .vm-item:hover { background: #2C2C2E; }
-        #vaultmate-picker .vm-avatar {
+        #localkey-picker .vm-item:last-child { border-bottom: none; }
+        #localkey-picker .vm-item:hover { background: #2C2C2E; }
+        #localkey-picker .vm-avatar {
             width: 34px;
             height: 34px;
             border-radius: 50%;
@@ -121,8 +121,8 @@ function createPickerStyles() {
             color: white;
             flex-shrink: 0;
         }
-        #vaultmate-picker .vm-info { flex: 1; min-width: 0; }
-        #vaultmate-picker .vm-name {
+        #localkey-picker .vm-info { flex: 1; min-width: 0; }
+        #localkey-picker .vm-name {
             font-size: 13px;
             font-weight: 600;
             color: #F2F2F7;
@@ -130,14 +130,14 @@ function createPickerStyles() {
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        #vaultmate-picker .vm-user {
+        #localkey-picker .vm-user {
             font-size: 11px;
             color: #8E8E93;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        #vaultmate-picker .vm-fill-badge {
+        #localkey-picker .vm-fill-badge {
             font-size: 10px;
             color: #30D158;
             background: rgba(48,209,88,0.12);
@@ -155,11 +155,11 @@ function showPicker(anchorEl, credentials) {
     createPickerStyles();
 
     const picker = document.createElement('div');
-    picker.id = 'vaultmate-picker';
+    picker.id = 'localkey-picker';
 
     const header = document.createElement('div');
     header.className = 'vm-header';
-    header.innerHTML = '<span style="font-size:16px">🔐</span><span class="vm-title">VaultMate — Saved Credentials</span>';
+    header.innerHTML = '<span style="font-size:16px">🔐</span><span class="vm-title">LocalKey — Saved Credentials</span>';
     picker.appendChild(header);
 
     credentials.forEach(cred => {

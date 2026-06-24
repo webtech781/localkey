@@ -11,16 +11,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("VaultMate: received message", request.action);
+  console.log("LocalKey: received message", request.action);
 
   if (request.action === "intercept_passkey" || request.action === "autofill_request" || request.action === "auto_save" || request.action === "ping" || request.action === "auto_save_confirm") {
-    chrome.runtime.sendNativeMessage('com.vaultmate.passkey', request, (response) => {
+    chrome.runtime.sendNativeMessage('com.localkey.passkey', request, (response) => {
       if (chrome.runtime.lastError) {
         const errMsg = chrome.runtime.lastError.message;
-        console.error("VaultMate Native Messaging Error:", errMsg);
+        console.error("LocalKey Native Messaging Error:", errMsg);
         sendResponse({ error: errMsg });
       } else {
-        console.log("VaultMate: response from native host", response);
+        console.log("LocalKey: response from native host", response);
         sendResponse(response);
       }
     });

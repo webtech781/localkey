@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
-# VaultMate PyInstaller Spec File
+# LocalKey PyInstaller Spec File
 # Builds a single-folder distribution on all platforms.
-# Run: pyinstaller vaultmate.spec
+# Run: pyinstaller localkey.spec
 
 import sys
 import os
@@ -25,7 +25,7 @@ a = Analysis(
         ('icon128.png', '.'),
         ('icon256.png', '.'),
         ('icon_app.png', '.'),
-        ('vaultmate.ico', '.'),
+        ('localkey.ico', '.'),
         # CustomTkinter theme assets
         *customtkinter_datas,
     ],
@@ -77,7 +77,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='VaultMate',
+    name='LocalKey',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -89,7 +89,58 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     # Windows: embed the icon into the .exe
-    icon='vaultmate.ico' if sys.platform == 'win32' else (
+    icon='localkey.ico' if sys.platform == 'win32' else (
+        'icon256.png' if sys.platform != 'darwin' else 'icon256.png'
+    ),
+)
+
+b = Analysis(
+    ['native_host.py'],
+    pathex=['.'],
+    binaries=[],
+    datas=[],
+    hiddenimports=[
+        'fido2',
+        'fido2.cose',
+        'fido2.webauthn',
+        'fido2.cbor',
+        'cbor2',
+        'sqlite3',
+        'database',
+        'crypto_utils',
+        'extension_installer',
+    ],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[
+        'matplotlib', 'numpy', 'pandas', 'scipy', 'IPython',
+    ],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+
+pyz_b = PYZ(b.pure, b.zipped_data, cipher=block_cipher)
+
+exe_b = EXE(
+    pyz_b,
+    b.scripts,
+    [],
+    exclude_binaries=True,
+    name='localkey_native_host',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon='localkey.ico' if sys.platform == 'win32' else (
         'icon256.png' if sys.platform != 'darwin' else 'icon256.png'
     ),
 )
@@ -99,22 +150,26 @@ coll = COLLECT(
     a.binaries,
     a.zipfiles,
     a.datas,
+    exe_b,
+    b.binaries,
+    b.zipfiles,
+    b.datas,
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='VaultMate',
+    name='LocalKey',
 )
 
 # macOS: wrap everything in a .app bundle
 if sys.platform == 'darwin':
     app = BUNDLE(
         coll,
-        name='VaultMate.app',
+        name='LocalKey.app',
         icon='icon256.png',
-        bundle_identifier='com.vaultmate.app',
+        bundle_identifier='com.localkey.app',
         info_plist={
-            'CFBundleName': 'VaultMate',
-            'CFBundleDisplayName': 'VaultMate',
+            'CFBundleName': 'LocalKey',
+            'CFBundleDisplayName': 'LocalKey',
             'CFBundleShortVersionString': '1.0.0',
             'CFBundleVersion': '1.0.0',
             'NSHighResolutionCapable': True,

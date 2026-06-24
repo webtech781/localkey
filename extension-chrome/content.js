@@ -85,10 +85,10 @@
             
             const listener = (event) => {
                 if (event.source !== window) return;
-                if (event.data && event.data.type === "VAULTMATE_PASSKEY_RESPONSE" && event.data.requestId === requestId) {
+                if (event.data && event.data.type === "LOCALKEY_PASSKEY_RESPONSE" && event.data.requestId === requestId) {
                     window.removeEventListener("message", listener);
                     if (!event.data.response || event.data.response.error) {
-                        reject(new Error(event.data.response ? event.data.response.error : "VaultMate bridge disconnected"));
+                        reject(new Error(event.data.response ? event.data.response.error : "LocalKey bridge disconnected"));
                     } else {
                         resolve(event.data.response);
                     }
@@ -97,7 +97,7 @@
             
             window.addEventListener("message", listener);
             window.postMessage({
-                type: "VAULTMATE_PASSKEY_REQUEST",
+                type: "LOCALKEY_PASSKEY_REQUEST",
                 requestId: requestId,
                 operation: operation,
                 options: serializeOptions(options)
@@ -105,14 +105,14 @@
         });
     }
 
-    const vaultmateCreate = async function(options) {
-        if (document.documentElement.hasAttribute('data-vaultmate-disabled')) {
+    const localkeyCreate = async function(options) {
+        if (document.documentElement.hasAttribute('data-localkey-disabled')) {
             return originalCreate(options);
         }
         if (!options || !options.publicKey) {
             return originalCreate(options);
         }
-        console.log("[VaultMate] Intercepting credentials.create for:", options.publicKey.rp && options.publicKey.rp.id);
+        console.log("[LocalKey] Intercepting credentials.create for:", options.publicKey.rp && options.publicKey.rp.id);
         try {
             const response = await sendToBridge("passkey_create", options);
             const parsed = deserializeResponse(response.credential);
@@ -131,7 +131,7 @@
             }
             return parsed;
         } catch (err) {
-            console.error("[VaultMate] Passkey create error:", err.message);
+            console.error("[LocalKey] Passkey create error:", err.message);
             return originalCreate(options);
         }
     };
@@ -140,7 +140,7 @@
 
     window.addEventListener("message", (event) => {
         if (event.source !== window) return;
-        if (event.data && event.data.type === "VAULTMATE_RESOLVE_CONDITIONAL") {
+        if (event.data && event.data.type === "LOCALKEY_RESOLVE_CONDITIONAL") {
             if (activeConditionalRequest) {
                 try {
                     const response = event.data.response;
@@ -164,25 +164,25 @@
         }
     });
 
-    const vaultmateGet = async function(options) {
-        if (document.documentElement.hasAttribute('data-vaultmate-disabled')) {
+    const localkeyGet = async function(options) {
+        if (document.documentElement.hasAttribute('data-localkey-disabled')) {
             return originalGet(options);
         }
         if (!options || !options.publicKey) {
             // Pass through conditional UI / non-passkey calls
             return originalGet(options);
         }
-        // Custom conditional WebAuthn interception to allow choosing standard accounts or passkeys from VaultMate
+        // Custom conditional WebAuthn interception to allow choosing standard accounts or passkeys from LocalKey
         if (options && options.mediation === 'conditional') {
             return new Promise((resolve, reject) => {
                 activeConditionalRequest = { resolve, reject };
                 window.postMessage({
-                    type: "VAULTMATE_CONDITIONAL_SETUP",
+                    type: "LOCALKEY_CONDITIONAL_SETUP",
                     options: serializeOptions(options)
                 }, "*");
             });
         }
-        console.log("[VaultMate] Intercepting credentials.get for:", options.publicKey.rpId);
+        console.log("[LocalKey] Intercepting credentials.get for:", options.publicKey.rpId);
         try {
             const response = await sendToBridge("passkey_get", options);
             const parsed = deserializeResponse(response.credential);
@@ -195,7 +195,7 @@
             }
             return parsed;
         } catch (err) {
-            console.error("[VaultMate] Passkey get error:", err.message);
+            console.error("[LocalKey] Passkey get error:", err.message);
             return originalGet(options);
         }
     };
@@ -203,20 +203,20 @@
     // Override at prototype level — direct assignment is silently ignored in Brave/Chrome
     try {
         Object.defineProperty(credProto, 'create', {
-            value: vaultmateCreate,
+            value: localkeyCreate,
             writable: true,
             configurable: true
         });
         Object.defineProperty(credProto, 'get', {
-            value: vaultmateGet,
+            value: localkeyGet,
             writable: true,
             configurable: true
         });
-        console.log("[VaultMate] WebAuthn override installed on CredentialsContainer prototype");
+        console.log("[LocalKey] WebAuthn override installed on CredentialsContainer prototype");
     } catch (e) {
         // Fallback to direct assignment
-        console.warn("[VaultMate] Prototype override failed, using direct assignment:", e.message);
-        navigator.credentials.create = vaultmateCreate;
-        navigator.credentials.get = vaultmateGet;
+        console.warn("[LocalKey] Prototype override failed, using direct assignment:", e.message);
+        navigator.credentials.create = localkeyCreate;
+        navigator.credentials.get = localkeyGet;
     }
 })();

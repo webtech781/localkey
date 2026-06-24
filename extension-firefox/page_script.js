@@ -1,4 +1,4 @@
-// VaultMate Passkey Injector
+// LocalKey Passkey Injector
 (function() {
     if (!window.navigator || !window.navigator.credentials) return;
 
@@ -56,13 +56,13 @@
             const requestId = Math.random().toString(36).substring(7);
             
             const handleResponse = (event) => {
-                if (event.source !== window || !event.data || event.data.type !== 'VAULTMATE_PASSKEY_CREATE_RES') return;
+                if (event.source !== window || !event.data || event.data.type !== 'LOCALKEY_PASSKEY_CREATE_RES') return;
                 if (event.data.requestId !== requestId) return;
                 
                 window.removeEventListener('message', handleResponse);
                 
                 if (event.data.error) {
-                    console.log("VaultMate Passkey error/fallback:", event.data.error);
+                    console.log("LocalKey Passkey error/fallback:", event.data.error);
                     originalCreate(options).then(resolve).catch(reject);
                 } else {
                     const parsed = deserializeResponse(event.data.credential);
@@ -73,7 +73,7 @@
             window.addEventListener('message', handleResponse);
             
             window.postMessage({
-                type: 'VAULTMATE_PASSKEY_CREATE_REQ',
+                type: 'LOCALKEY_PASSKEY_CREATE_REQ',
                 requestId: requestId,
                 options: serializeOptions(options)
             }, '*');
@@ -87,13 +87,13 @@
             const requestId = Math.random().toString(36).substring(7);
             
             const handleResponse = (event) => {
-                if (event.source !== window || !event.data || event.data.type !== 'VAULTMATE_PASSKEY_GET_RES') return;
+                if (event.source !== window || !event.data || event.data.type !== 'LOCALKEY_PASSKEY_GET_RES') return;
                 if (event.data.requestId !== requestId) return;
                 
                 window.removeEventListener('message', handleResponse);
                 
                 if (event.data.error) {
-                    console.log("VaultMate Passkey error/fallback:", event.data.error);
+                    console.log("LocalKey Passkey error/fallback:", event.data.error);
                     originalGet(options).then(resolve).catch(reject);
                 } else {
                     const parsed = deserializeResponse(event.data.credential);
@@ -104,7 +104,7 @@
             window.addEventListener('message', handleResponse);
             
             window.postMessage({
-                type: 'VAULTMATE_PASSKEY_GET_REQ',
+                type: 'LOCALKEY_PASSKEY_GET_REQ',
                 requestId: requestId,
                 options: serializeOptions(options)
             }, '*');

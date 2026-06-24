@@ -1,18 +1,18 @@
 // content.js - Intercepts WebAuthn and manages Premium Autofill Picker / Auto-Save
 
-let vaultmateEnabled = true;
+let localkeyEnabled = true;
 let activeConditionalRequest = null;
 let activeInputEl = null;
 
 // Fetch local enabled status from storage
 chrome.storage.local.get({ enabled: true }, (res) => {
-    vaultmateEnabled = res.enabled !== false;
+    localkeyEnabled = res.enabled !== false;
 });
 
 // Watch for storage changes in real-time
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.enabled) {
-        vaultmateEnabled = changes.enabled.newValue !== false;
+        localkeyEnabled = changes.enabled.newValue !== false;
     }
 });
 
@@ -92,7 +92,7 @@ if (typeof exportFunction !== 'undefined' && typeof cloneInto !== 'undefined' &&
     }
 
     function interceptCreate(optionsWrapper) {
-        if (!vaultmateEnabled) {
+        if (!localkeyEnabled) {
             return originalCreate.call(window.wrappedJSObject.navigator.credentials, optionsWrapper);
         }
 
@@ -109,7 +109,7 @@ if (typeof exportFunction !== 'undefined' && typeof cloneInto !== 'undefined' &&
             }, function(response) {
                 if (!response || response.error) {
                     const errMsg = response ? response.error : "Native host crashed or disconnected";
-                    console.log("VaultMate Passkey error/fallback:", errMsg);
+                    console.log("LocalKey Passkey error/fallback:", errMsg);
                     originalCreate.call(window.wrappedJSObject.navigator.credentials, options)
                         .then(resolve)
                         .catch(reject);
@@ -140,7 +140,7 @@ if (typeof exportFunction !== 'undefined' && typeof cloneInto !== 'undefined' &&
     }
 
     function interceptGet(optionsWrapper) {
-        if (!vaultmateEnabled) {
+        if (!localkeyEnabled) {
             return originalGet.call(window.wrappedJSObject.navigator.credentials, optionsWrapper);
         }
 
@@ -149,7 +149,7 @@ if (typeof exportFunction !== 'undefined' && typeof cloneInto !== 'undefined' &&
             return originalGet.call(window.wrappedJSObject.navigator.credentials, optionsWrapper);
         }
 
-        // Custom conditional WebAuthn interception to allow choosing standard accounts or passkeys from VaultMate
+        // Custom conditional WebAuthn interception to allow choosing standard accounts or passkeys from LocalKey
         if (options && options.mediation === 'conditional') {
             const promiseFunc = function(resolve, reject) {
                 activeConditionalRequest = {
@@ -169,7 +169,7 @@ if (typeof exportFunction !== 'undefined' && typeof cloneInto !== 'undefined' &&
             }, function(response) {
                 if (!response || response.error) {
                     const errMsg = response ? response.error : "Native host crashed or disconnected";
-                    console.log("VaultMate Passkey error/fallback:", errMsg);
+                    console.log("LocalKey Passkey error/fallback:", errMsg);
                     originalGet.call(window.wrappedJSObject.navigator.credentials, options)
                         .then(resolve)
                         .catch(reject);
@@ -414,11 +414,11 @@ function removePickerEl() {
 }
 
 function createPickerStyles() {
-    if (document.getElementById('vaultmate-styles')) return;
+    if (document.getElementById('localkey-styles')) return;
     const style = document.createElement('style');
-    style.id = 'vaultmate-styles';
+    style.id = 'localkey-styles';
     style.textContent = `
-        #vaultmate-picker {
+        #localkey-picker {
             position: fixed;
             z-index: 2147483647;
             background: rgba(20, 21, 26, 0.95);
@@ -437,7 +437,7 @@ function createPickerStyles() {
             from { opacity: 0; transform: translateY(-8px) scale(0.98); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-        #vaultmate-picker .vm-header {
+        #localkey-picker .vm-header {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -445,17 +445,17 @@ function createPickerStyles() {
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             background: rgba(255,255,255,0.02);
         }
-        #vaultmate-picker .vm-logo {
+        #localkey-picker .vm-logo {
             font-size: 16px;
         }
-        #vaultmate-picker .vm-title {
+        #localkey-picker .vm-title {
             font-size: 11px;
             font-weight: 700;
             color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        #vaultmate-picker .vm-item {
+        #localkey-picker .vm-item {
             display: flex;
             align-items: center;
             gap: 14px;
@@ -464,14 +464,14 @@ function createPickerStyles() {
             transition: all 0.15s ease;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
-        #vaultmate-picker .vm-item:last-child {
+        #localkey-picker .vm-item:last-child {
             border-bottom: none;
         }
-        #vaultmate-picker .vm-item:hover {
+        #localkey-picker .vm-item:hover {
             background: rgba(255, 255, 255, 0.05);
             transform: translateX(4px);
         }
-        #vaultmate-picker .vm-avatar {
+        #localkey-picker .vm-avatar {
             width: 36px;
             height: 36px;
             border-radius: 50%;
@@ -485,11 +485,11 @@ function createPickerStyles() {
             flex-shrink: 0;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-        #vaultmate-picker .vm-info {
+        #localkey-picker .vm-info {
             flex: 1;
             min-width: 0;
         }
-        #vaultmate-picker .vm-name {
+        #localkey-picker .vm-name {
             font-size: 13.5px;
             font-weight: 600;
             color: #ffffff;
@@ -497,7 +497,7 @@ function createPickerStyles() {
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        #vaultmate-picker .vm-user {
+        #localkey-picker .vm-user {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.45);
             white-space: nowrap;
@@ -505,7 +505,7 @@ function createPickerStyles() {
             text-overflow: ellipsis;
             margin-top: 1px;
         }
-        #vaultmate-picker .vm-fill-badge {
+        #localkey-picker .vm-fill-badge {
             font-size: 10px;
             color: #a855f7;
             background: rgba(168, 85, 247, 0.15);
@@ -516,7 +516,7 @@ function createPickerStyles() {
             flex-shrink: 0;
             transition: all 0.2s ease;
         }
-        #vaultmate-picker .vm-item:hover .vm-fill-badge {
+        #localkey-picker .vm-item:hover .vm-fill-badge {
             background: linear-gradient(135deg, #6366f1, #a855f7);
             color: white;
             border-color: transparent;
@@ -540,7 +540,7 @@ function showPicker(anchorEl, credentials, showAll = false) {
     createPickerStyles();
 
     const picker = document.createElement('div');
-    picker.id = 'vaultmate-picker';
+    picker.id = 'localkey-picker';
 
     // Header
     const header = document.createElement('div');
@@ -559,7 +559,7 @@ function showPicker(anchorEl, credentials, showAll = false) {
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'vm-title';
-    titleSpan.textContent = 'VaultMate — Saved Credentials';
+    titleSpan.textContent = 'LocalKey — Saved Credentials';
 
     logoContainer.appendChild(logoSpan);
     logoContainer.appendChild(titleSpan);
@@ -653,7 +653,7 @@ function showPicker(anchorEl, credentials, showAll = false) {
                             activeConditionalRequest.resolve(cloned);
                             activeConditionalRequest = null;
                         } else {
-                            console.error("[VaultMate] Passkey resolve error:", response ? response.error : "No response");
+                            console.error("[LocalKey] Passkey resolve error:", response ? response.error : "No response");
                         }
                     });
                 } else {
@@ -739,7 +739,7 @@ function fillCredential(anchorEl, cred) {
 }
 
 function fetchAndShowPicker(inputEl) {
-    if (!vaultmateEnabled) return;
+    if (!localkeyEnabled) return;
     const url = window.location.href;
 
     const showAll = activeConditionalRequest !== null;
@@ -765,7 +765,7 @@ function fetchAndShowPicker(inputEl) {
 // --- 3. Event Listeners ---
 
 document.addEventListener('focusin', (e) => {
-    if (!vaultmateEnabled) return;
+    if (!localkeyEnabled) return;
     const el = e.target;
     if (!el || el.tagName !== 'INPUT') return;
     const type = el.type ? el.type.toLowerCase() : 'text';
@@ -788,7 +788,7 @@ document.addEventListener('keydown', (e) => {
 
 // Dynamically capture keystrokes and write them to storage *before* submission occurs
 document.addEventListener('input', (e) => {
-    if (!vaultmateEnabled) return;
+    if (!localkeyEnabled) return;
     const el = e.target;
     if (el && el.tagName === 'INPUT') {
         const type = el.type ? el.type.toLowerCase() : 'text';
@@ -820,7 +820,7 @@ document.addEventListener('input', (e) => {
 }, true);
 
 function captureAndSave(formOrElement) {
-    if (!vaultmateEnabled) return;
+    if (!localkeyEnabled) return;
     
     // Capture the login URL and title immediately and synchronously
     const currentUrl = getCleanLoginUrl(window.location.href);
@@ -865,7 +865,7 @@ function captureAndSave(formOrElement) {
 document.addEventListener('submit', (e) => { captureAndSave(e.target); }, true);
 
 document.addEventListener('click', (e) => {
-    if (!vaultmateEnabled) return;
+    if (!localkeyEnabled) return;
     // Resolve any nested click targets (like icons or spans inside buttons)
     const btn = e.target.closest('button') || e.target.closest('input[type="submit"]') || e.target.closest('input[type="button"]');
     if (btn) {
@@ -874,7 +874,7 @@ document.addEventListener('click', (e) => {
 }, true);
 
 document.addEventListener('keydown', (e) => {
-    if (!vaultmateEnabled) return;
+    if (!localkeyEnabled) return;
     if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
         const type = e.target.type ? e.target.type.toLowerCase() : 'text';
         if (type === 'password' || type === 'text' || type === 'email') {
@@ -890,14 +890,14 @@ window.addEventListener('blur', () => {
 
 function showSavePrompt(pending) {
     const inject = () => {
-        if (document.getElementById('vaultmate-save-prompt')) return;
+        if (document.getElementById('localkey-save-prompt')) return;
         
         // Inject styles if not present
-        if (!document.getElementById('vaultmate-prompt-styles')) {
+        if (!document.getElementById('localkey-prompt-styles')) {
             const style = document.createElement('style');
-            style.id = 'vaultmate-prompt-styles';
+            style.id = 'localkey-prompt-styles';
             style.textContent = `
-                #vaultmate-save-prompt {
+                #localkey-save-prompt {
                     position: fixed;
                     top: 20px;
                     right: 20px;
@@ -918,29 +918,29 @@ function showSavePrompt(pending) {
                     from { opacity: 0; transform: translateY(-20px) scale(0.95); }
                     to   { opacity: 1; transform: translateY(0) scale(1); }
                 }
-                #vaultmate-save-prompt .vm-prompt-header {
+                #localkey-save-prompt .vm-prompt-header {
                     display: flex;
                     align-items: center;
                     gap: 10px;
                     margin-bottom: 8px;
                 }
-                #vaultmate-save-prompt .vm-prompt-logo {
+                #localkey-save-prompt .vm-prompt-logo {
                     font-size: 18px;
                 }
-                #vaultmate-save-prompt .vm-prompt-title {
+                #localkey-save-prompt .vm-prompt-title {
                     font-size: 11px;
                     font-weight: 700;
                     text-transform: uppercase;
                     color: rgba(255,255,255,0.5);
                     letter-spacing: 1px;
                 }
-                #vaultmate-save-prompt .vm-prompt-body {
+                #localkey-save-prompt .vm-prompt-body {
                     font-size: 12.5px;
                     line-height: 1.5;
                     color: #cbd5e1;
                     margin-bottom: 12px;
                 }
-                #vaultmate-save-prompt .vm-prompt-details {
+                #localkey-save-prompt .vm-prompt-details {
                     background: rgba(255,255,255,0.03);
                     border-radius: 8px;
                     padding: 8px 10px;
@@ -948,18 +948,18 @@ function showSavePrompt(pending) {
                     border: 1px solid rgba(255,255,255,0.04);
                     font-size: 11px;
                 }
-                #vaultmate-save-prompt .vm-prompt-detail-item {
+                #localkey-save-prompt .vm-prompt-detail-item {
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 4px;
                 }
-                #vaultmate-save-prompt .vm-prompt-detail-item:last-child {
+                #localkey-save-prompt .vm-prompt-detail-item:last-child {
                     margin-bottom: 0;
                 }
-                #vaultmate-save-prompt .vm-prompt-detail-label {
+                #localkey-save-prompt .vm-prompt-detail-label {
                     color: #94a3b8;
                 }
-                #vaultmate-save-prompt .vm-prompt-detail-val {
+                #localkey-save-prompt .vm-prompt-detail-val {
                     font-weight: 600;
                     color: #ffffff;
                     max-width: 140px;
@@ -967,11 +967,11 @@ function showSavePrompt(pending) {
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
-                #vaultmate-save-prompt .vm-prompt-actions {
+                #localkey-save-prompt .vm-prompt-actions {
                     display: flex;
                     gap: 10px;
                 }
-                #vaultmate-save-prompt .vm-prompt-btn {
+                #localkey-save-prompt .vm-prompt-btn {
                     flex: 1;
                     padding: 8px 12px;
                     border-radius: 8px;
@@ -982,21 +982,21 @@ function showSavePrompt(pending) {
                     transition: all 0.2s ease;
                     text-align: center;
                 }
-                #vaultmate-save-prompt .vm-prompt-btn-save {
+                #localkey-save-prompt .vm-prompt-btn-save {
                     background: linear-gradient(135deg, #6366f1, #a855f7);
                     color: #ffffff;
                     box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
                 }
-                #vaultmate-save-prompt .vm-prompt-btn-save:hover {
+                #localkey-save-prompt .vm-prompt-btn-save:hover {
                     transform: translateY(-1px);
                     box-shadow: 0 6px 16px rgba(168, 85, 247, 0.45);
                 }
-                #vaultmate-save-prompt .vm-prompt-btn-cancel {
+                #localkey-save-prompt .vm-prompt-btn-cancel {
                     background: transparent;
                     color: #cbd5e1;
                     border: 1px solid rgba(255,255,255,0.15);
                 }
-                #vaultmate-save-prompt .vm-prompt-btn-cancel:hover {
+                #localkey-save-prompt .vm-prompt-btn-cancel:hover {
                     background: rgba(255,255,255,0.05);
                     color: #ffffff;
                     border-color: rgba(255,255,255,0.25);
@@ -1006,7 +1006,7 @@ function showSavePrompt(pending) {
         }
 
         const container = document.createElement('div');
-        container.id = 'vaultmate-save-prompt';
+        container.id = 'localkey-save-prompt';
 
         // Header
         const prHeader = document.createElement('div');
@@ -1018,7 +1018,7 @@ function showSavePrompt(pending) {
 
         const prTitle = document.createElement('span');
         prTitle.className = 'vm-prompt-title';
-        prTitle.textContent = 'VaultMate';
+        prTitle.textContent = 'LocalKey';
 
         prHeader.appendChild(prLogo);
         prHeader.appendChild(prTitle);
@@ -1026,7 +1026,7 @@ function showSavePrompt(pending) {
         // Body
         const prBody = document.createElement('div');
         prBody.className = 'vm-prompt-body';
-        prBody.textContent = 'Would you like to store this username & password into VaultMate?';
+        prBody.textContent = 'Would you like to store this username & password into LocalKey?';
 
         // Details
         const prDetails = document.createElement('div');

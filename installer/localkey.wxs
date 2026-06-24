@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  VaultMate Windows Installer (.msi)
+  LocalKey Windows Installer (.msi)
   Built with WiX Toolset v3
 
   What the MSI does (at install time on the user's PC):
     1. Checks for Python 3.11+, installs silently if missing
-    2. Downloads VaultMate source from GitHub → C:\VaultMate (or chosen dir)
+    2. Downloads LocalKey source from GitHub → C:\LocalKey (or chosen dir)
     3. Runs Application\build_windows.bat in the background
     4. Creates Start Menu shortcut (always)
     5. Creates Desktop shortcut (optional Feature — user can uncheck)
@@ -15,20 +15,20 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <Product Id="*"
-           Name="VaultMate"
+           Name="LocalKey"
            Language="1033"
-           Version="$(env.VAULTMATE_VERSION)"
+           Version="$(env.LOCALKEY_VERSION)"
            Manufacturer="webtech781"
            UpgradeCode="7A3F2C1D-8E4B-4A9F-B6D0-2C5E8F1A9B3C">
 
     <Package InstallerVersion="500"
              Compressed="yes"
              InstallScope="perMachine"
-             Description="VaultMate — Offline Password Manager &amp; Passkey Authenticator"
-             Comments="https://github.com/webtech781/vaultmate-gui" />
+             Description="LocalKey — Offline Password Manager &amp; Passkey Authenticator"
+             Comments="https://github.com/webtech781/localkey" />
 
     <!-- Prevent downgrade -->
-    <MajorUpgrade DowngradeErrorMessage="A newer version of VaultMate is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of LocalKey is already installed." />
 
     <MediaTemplate EmbedCab="yes" />
 
@@ -38,22 +38,22 @@
 
     <!-- Desktop shortcut property (1 = create). Controlled by Feature selection. -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-    <Property Id="ApplicationFolderName" Value="VaultMate" />
+    <Property Id="ApplicationFolderName" Value="LocalKey" />
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          DIRECTORY STRUCTURE
     ═══════════════════════════════════════════════════════════════════════════ -->
     <Directory Id="TARGETDIR" Name="SourceDir">
 
-      <!-- Main install location: C:\VaultMate -->
-      <Directory Id="INSTALLDIR" Name="VaultMate">
+      <!-- Main install location: C:\LocalKey -->
+      <Directory Id="INSTALLDIR" Name="LocalKey">
         <!-- Helper PS1 lives here (separate from downloaded source) -->
         <Directory Id="HELPERDIR" Name="_setup" />
       </Directory>
 
       <!-- Start Menu -->
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="AppMenuFolder" Name="VaultMate" />
+        <Directory Id="AppMenuFolder" Name="LocalKey" />
       </Directory>
 
       <!-- Desktop -->
@@ -80,17 +80,17 @@
       <Component Id="C_StartMenuShortcut"
                  Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678901">
         <Shortcut Id="StartMenuShortcut"
-                  Name="VaultMate"
-                  Target="[INSTALLDIR]Application\dist\VaultMate\VaultMate.exe"
+                  Name="LocalKey"
+                  Target="[INSTALLDIR]Application\dist\LocalKey\LocalKey.exe"
                   WorkingDirectory="INSTALLDIR"
-                  Icon="VaultMateIco"
+                  Icon="LocalKeyIco"
                   IconIndex="0"
-                  Description="VaultMate Password Manager" />
+                  Description="LocalKey Password Manager" />
         <!-- ICE64: every per-user directory must be in the RemoveFile table -->
         <RemoveFolder Id="RF_AppMenuFolder" Directory="AppMenuFolder" On="uninstall" />
         <!-- KeyPath via registry (shortcuts cannot be KeyPath directly) -->
         <RegistryValue Root="HKCU"
-                       Key="Software\VaultMate"
+                       Key="Software\LocalKey"
                        Name="StartMenu"
                        Type="integer"
                        Value="1"
@@ -103,14 +103,14 @@
       <Component Id="C_DesktopShortcut"
                  Guid="C3D4E5F6-A7B8-9012-CDEF-123456789012">
         <Shortcut Id="DesktopShortcut"
-                  Name="VaultMate"
-                  Target="[INSTALLDIR]Application\dist\VaultMate\VaultMate.exe"
+                  Name="LocalKey"
+                  Target="[INSTALLDIR]Application\dist\LocalKey\LocalKey.exe"
                   WorkingDirectory="INSTALLDIR"
-                  Icon="VaultMateIco"
+                  Icon="LocalKeyIco"
                   IconIndex="0"
-                  Description="VaultMate Password Manager" />
+                  Description="LocalKey Password Manager" />
         <RegistryValue Root="HKCU"
-                       Key="Software\VaultMate"
+                       Key="Software\LocalKey"
                        Name="DesktopShortcut"
                        Type="integer"
                        Value="1"
@@ -123,8 +123,8 @@
     ═══════════════════════════════════════════════════════════════════════════ -->
 
     <Feature Id="F_Core"
-             Title="VaultMate"
-             Description="VaultMate Password Manager (required)"
+             Title="LocalKey"
+             Description="LocalKey Password Manager (required)"
              Level="1"
              Absent="disallow"
              Display="expand">
@@ -145,9 +145,9 @@
     <!-- ═══════════════════════════════════════════════════════════════════════
          ICONS
     ═══════════════════════════════════════════════════════════════════════════ -->
-    <Icon Id="VaultMateIco" SourceFile="..\Application\vaultmate.ico" />
-    <Property Id="ARPPRODUCTICON" Value="VaultMateIco" />
-    <Property Id="ARPHELPLINK"    Value="https://github.com/webtech781/vaultmate-gui" />
+    <Icon Id="LocalKeyIco" SourceFile="..\Application\localkey.ico" />
+    <Property Id="ARPPRODUCTICON" Value="LocalKeyIco" />
+    <Property Id="ARPHELPLINK"    Value="https://github.com/webtech781/localkey" />
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          CUSTOM ACTIONS
@@ -168,11 +168,11 @@
     <!--
       Deferred: run setup_build.ps1.
       The Property value set above becomes [CustomActionData] inside the deferred CA.
-      We pass it as env var VAULTMATE_CA_DATA so the PS1 can read it.
+      We pass it as env var LOCALKEY_CA_DATA so the PS1 can read it.
     -->
     <CustomAction Id="CA_RunSetup"
                   Directory="INSTALLDIR"
-                  ExeCommand="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe -NonInteractive -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command &quot;$env:VAULTMATE_CA_DATA='[CustomActionData]'; &amp; '[INSTALLDIR]_setup\setup_build.ps1'&quot;"
+                  ExeCommand="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe -NonInteractive -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command &quot;$env:LOCALKEY_CA_DATA='[CustomActionData]'; &amp; '[INSTALLDIR]_setup\setup_build.ps1'&quot;"
                   Execute="deferred"
                   Impersonate="no"
                   Return="ignore" />
@@ -200,17 +200,17 @@
     </InstallExecuteSequence>
 
     <!-- === UI — custom UI with inline log viewer === -->
-    <UIRef Id="VaultMateUI" />
+    <UIRef Id="LocalKeyUI" />
     <UIRef Id="WixUI_ErrorProgressText" />
 
     <!-- License RTF embedded by WiX -->
     <WixVariable Id="WixUILicenseRtf" Value="..\LICENSE.rtf" />
 
-    <!-- CA: read setup log into VAULTMATE_LOG_CONTENT (Show Logs panel) -->
+    <!-- CA: read setup log into LOCALKEY_LOG_CONTENT (Show Logs panel) -->
     <CustomAction Id="CA_ReadLog" Script="vbscript" Execute="immediate" Return="ignore"><![CDATA[
       On Error Resume Next
       Dim fso, f, log, logPath
-      logPath = Session.Property("TEMP") & "\vaultmate_setup.log"
+      logPath = Session.Property("TEMP") & "\localkey_setup.log"
       Set fso = CreateObject("Scripting.FileSystemObject")
       If fso.FileExists(logPath) Then
         Set f = fso.OpenTextFile(logPath, 1)
@@ -224,13 +224,13 @@
               "Path: " & logPath & Chr(13) & Chr(10) & _
               "The build helper starts after files are copied."
       End If
-      Session.Property("VAULTMATE_LOG_CONTENT") = log
+      Session.Property("LOCALKEY_LOG_CONTENT") = log
     ]]></CustomAction>
 
     <!-- CA: open log in Notepad from the Finish dialog -->
     <CustomAction Id="CA_OpenLog"
                   Directory="TARGETDIR"
-                  ExeCommand="[SystemFolder]notepad.exe [%TEMP]\vaultmate_setup.log"
+                  ExeCommand="[SystemFolder]notepad.exe [%TEMP]\localkey_setup.log"
                   Execute="immediate"
                   Return="ignore" />
 

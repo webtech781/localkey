@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  VaultMate Custom Installer UI
+  LocalKey Custom Installer UI
   Replaces WixUI_FeatureTree so we can customise the ProgressDlg
   to add an inline Show / Hide Logs panel.
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 <Fragment>
-<UI Id="VaultMateUI">
+<UI Id="LocalKeyUI">
 
   <!-- ═══ Text styles ═══════════════════════════════════════════════════════ -->
   <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
@@ -84,14 +84,14 @@
 
 <!-- ── WelcomeDlg ─────────────────────────────────────────────────────────── -->
 <UI>
-<Dialog Id="WelcomeDlg" Width="370" Height="270" Title="VaultMate Setup">
+<Dialog Id="WelcomeDlg" Width="370" Height="270" Title="LocalKey Setup">
   <Control Id="Bmp"         Type="Bitmap"     X="0"   Y="0"   W="164" H="270" TabSkip="no" Text="WixUI_Bmp_Dialog" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" W="370" H="0" />
   <Control Id="Title"       Type="Text"       X="135" Y="20"  W="220" H="60" Transparent="yes" NoPrefix="yes">
-    <Text>{\WixUI_Font_Bigger}Welcome to the VaultMate Setup Wizard</Text>
+    <Text>{\WixUI_Font_Bigger}Welcome to the LocalKey Setup Wizard</Text>
   </Control>
   <Control Id="Desc"        Type="Text"       X="135" Y="80"  W="220" H="80" Transparent="yes" NoPrefix="yes">
-    <Text>This wizard will install VaultMate on your computer. Click Next to continue.</Text>
+    <Text>This wizard will install LocalKey on your computer. Click Next to continue.</Text>
   </Control>
   <Control Id="Next"        Type="PushButton" X="236" Y="243" W="56"  H="17" Default="yes" Text="&amp;Next >" />
   <Control Id="Cancel"      Type="PushButton" X="304" Y="243" W="56"  H="17" Cancel="yes"  Text="Cancel" />
@@ -99,7 +99,7 @@
 </Dialog>
 
 <!-- ── LicenseDlg ────────────────────────────────────────────────────────── -->
-<Dialog Id="LicenseDlg" Width="370" Height="270" Title="VaultMate Setup — License Agreement">
+<Dialog Id="LicenseDlg" Width="370" Height="270" Title="LocalKey Setup — License Agreement">
   <Control Id="BannerBmp"   Type="Bitmap"     X="0"   Y="0"   W="370" H="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"       X="0"   Y="44"  W="370" H="0" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" W="370" H="0" />
@@ -121,7 +121,7 @@
 </Dialog>
 
 <!-- ── FeaturesDlg (Desktop Shortcut checkbox) ────────────────────────────── -->
-<Dialog Id="FeaturesDlg" Width="370" Height="270" Title="VaultMate Setup — Options">
+<Dialog Id="FeaturesDlg" Width="370" Height="270" Title="LocalKey Setup — Options">
   <Control Id="BannerBmp"   Type="Bitmap"     X="0"   Y="0"   W="370" H="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"       X="0"   Y="44"  W="370" H="0" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" W="370" H="0" />
@@ -138,7 +138,7 @@
 </Dialog>
 
 <!-- ── VerifyReadyDlg ─────────────────────────────────────────────────────── -->
-<Dialog Id="VerifyReadyDlg" Width="370" Height="270" Title="VaultMate Setup — Ready to Install">
+<Dialog Id="VerifyReadyDlg" Width="370" Height="270" Title="LocalKey Setup — Ready to Install">
   <Control Id="BannerBmp"   Type="Bitmap"     X="0"   Y="0"   W="370" H="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"       X="0"   Y="44"  W="370" H="0" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" W="370" H="0" />
@@ -146,7 +146,7 @@
     <Text>{\WixUI_Font_Title}Ready to Install</Text>
   </Control>
   <Control Id="Desc"        Type="Text"       X="25"  Y="23"  W="320" H="40" Transparent="yes" NoPrefix="yes">
-    <Text>Click Install to begin. VaultMate will be installed to C:\VaultMate.</Text>
+    <Text>Click Install to begin. LocalKey will be installed to C:\LocalKey.</Text>
   </Control>
   <Control Id="Back"        Type="PushButton" X="180" Y="243" W="56"  H="17" Text="&lt; &amp;Back" />
   <Control Id="Install"     Type="PushButton" X="236" Y="243" W="56"  H="17" Default="yes" Text="&amp;Install" />
@@ -154,15 +154,15 @@
 </Dialog>
 
 <!-- ── VmProgressDlg ── custom with Show / Hide Logs ─────────────────────── -->
-<Dialog Id="VmProgressDlg" Width="370" Height="270" Title="VaultMate Setup — Installing">
+<Dialog Id="VmProgressDlg" Width="370" Height="270" Title="LocalKey Setup — Installing">
   <Control Id="BannerBmp"   Type="Bitmap"       X="0"   Y="0"   W="370" H="44"  TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"         X="0"   Y="44"  W="370" H="0" />
   <Control Id="BottomLine"  Type="Line"         X="0"   Y="234" W="370" H="0" />
   <Control Id="Title"       Type="Text"         X="15"  Y="6"   W="200" H="15"  Transparent="yes" NoPrefix="yes">
-    <Text>{\WixUI_Font_Title}Installing VaultMate</Text>
+    <Text>{\WixUI_Font_Title}Installing LocalKey</Text>
   </Control>
   <Control Id="Desc"        Type="Text"         X="25"  Y="23"  W="320" H="15"  Transparent="yes" NoPrefix="yes">
-    <Text>Please wait while the Setup Wizard installs VaultMate.</Text>
+    <Text>Please wait while the Setup Wizard installs LocalKey.</Text>
   </Control>
 
   <!-- Status label + progress bar -->
@@ -184,7 +184,7 @@
 
   <!-- Inline log panel — same style as the license text box -->
   <Control Id="LogText"     Type="ScrollableText" X="20" Y="103" W="330" H="120" Sunken="yes" TabSkip="no"
-           Text="[VAULTMATE_LOG_CONTENT]" Hidden="yes">
+           Text="[LOCALKEY_LOG_CONTENT]" Hidden="yes">
     <Condition Action="show">SHOW_LOGS = "1"</Condition>
     <Condition Action="hide">NOT SHOW_LOGS = "1"</Condition>
   </Control>
@@ -195,14 +195,14 @@
 </Dialog>
 
 <!-- ── VmExitDlg ──────────────────────────────────────────────────────────── -->
-<Dialog Id="VmExitDlg" Width="370" Height="270" Title="VaultMate Setup — Completed">
+<Dialog Id="VmExitDlg" Width="370" Height="270" Title="LocalKey Setup — Completed">
   <Control Id="Bmp"         Type="Bitmap"     X="0"   Y="0"   W="164" H="270" TabSkip="no" Text="WixUI_Bmp_Dialog" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" W="370" H="0" />
   <Control Id="Title"       Type="Text"       X="135" Y="20"  W="220" H="60" Transparent="yes" NoPrefix="yes">
-    <Text>{\WixUI_Font_Bigger}Completed the VaultMate Setup Wizard</Text>
+    <Text>{\WixUI_Font_Bigger}Completed the LocalKey Setup Wizard</Text>
   </Control>
   <Control Id="Desc"        Type="Text"       X="135" Y="85"  W="220" H="60" Transparent="yes" NoPrefix="yes">
-    <Text>Click Finish to exit the Setup Wizard. VaultMate is building in the background — check the log for details.</Text>
+    <Text>Click Finish to exit the Setup Wizard. LocalKey is building in the background — check the log for details.</Text>
   </Control>
   <Control Id="ViewLogBt"   Type="PushButton" X="135" Y="155" W="90"  H="17" Text="View Install Log" />
   <Control Id="Finish"      Type="PushButton" X="236" Y="243" W="56"  H="17" Default="yes" Text="&amp;Finish" />
@@ -211,8 +211,8 @@
 </Dialog>
 
 <!-- ── CancelDlg ─────────────────────────────────────────────────────────── -->
-<Dialog Id="CancelDlg" Width="260" Height="85" Title="VaultMate Setup" NoMinimize="yes">
-  <Control Id="Question"    Type="Text"       X="48"  Y="15"  W="194" H="30" Text="Are you sure you want to cancel VaultMate installation?" />
+<Dialog Id="CancelDlg" Width="260" Height="85" Title="LocalKey Setup" NoMinimize="yes">
+  <Control Id="Question"    Type="Text"       X="48"  Y="15"  W="194" H="30" Text="Are you sure you want to cancel LocalKey installation?" />
   <Control Id="Return"      Type="PushButton" X="100" Y="57"  W="56"  H="17" Default="yes" Text="&amp;Return" />
   <Control Id="Exit"        Type="PushButton" X="164" Y="57"  W="56"  H="17" Cancel="yes"  Text="E&amp;xit" />
 </Dialog>

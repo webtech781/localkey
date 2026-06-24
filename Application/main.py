@@ -11,12 +11,12 @@ import browser_profiles
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
-CONFIG_FILE = "vaultmate_config.json"
+CONFIG_FILE = "localkey_config.json"
 
 class PasswordManager(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("VaultMate - Password Manager")
+        self.title("LocalKey - Password Manager")
         self.geometry("900x650")
         
         # Set window icon — use PIL for reliable PNG/ICO support
@@ -29,7 +29,7 @@ class PasswordManager(ctk.CTk):
         except Exception:
             # Fallback: try .ico (Windows) then silent skip
             try:
-                self.iconbitmap(os.path.join(_icon_dir, "vaultmate.ico"))
+                self.iconbitmap(os.path.join(_icon_dir, "localkey.ico"))
             except Exception:
                 pass
         
@@ -162,10 +162,10 @@ class PasswordManager(ctk.CTk):
             _logo_ctk = ctk.CTkImage(light_image=_logo_pil, dark_image=_logo_pil, size=(80, 80))
             logo_img_lbl = ctk.CTkLabel(self.main_frame, image=_logo_ctk, text="")
             logo_img_lbl.grid(row=0, column=0, pady=(40, 8))
-            title = ctk.CTkLabel(self.main_frame, text="VaultMate", font=ctk.CTkFont(family="Helvetica", size=32, weight="bold"))
+            title = ctk.CTkLabel(self.main_frame, text="LocalKey", font=ctk.CTkFont(family="Helvetica", size=32, weight="bold"))
             title.grid(row=1, column=0, pady=(0, 20))
         except Exception:
-            title = ctk.CTkLabel(self.main_frame, text="🔐 VaultMate", font=ctk.CTkFont(family="Helvetica", size=36, weight="bold"))
+            title = ctk.CTkLabel(self.main_frame, text="🔐 LocalKey", font=ctk.CTkFont(family="Helvetica", size=36, weight="bold"))
             title.grid(row=0, column=0, pady=(60, 20))
         
         login_frame = ctk.CTkFrame(self.main_frame, width=400, corner_radius=12)
@@ -284,7 +284,7 @@ class PasswordManager(ctk.CTk):
     def show_quick_lookup_panel(self):
         """Floating always-on-top credential search panel for use while in other apps."""
         panel = ctk.CTkToplevel(self)
-        panel.title("VaultMate — Quick Lookup")
+        panel.title("LocalKey — Quick Lookup")
         panel.geometry("460x520")
         panel.attributes('-topmost', True)
         panel.after(100, panel.grab_set)
@@ -374,9 +374,9 @@ class PasswordManager(ctk.CTk):
             _sb_logo_row = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
             _sb_logo_row.grid(row=0, column=0, padx=16, pady=(24, 2), sticky="w")
             ctk.CTkLabel(_sb_logo_row, image=_sb_ctk, text="").grid(row=0, column=0, padx=(0, 8))
-            ctk.CTkLabel(_sb_logo_row, text="VaultMate", font=ctk.CTkFont(family="Helvetica", size=20, weight="bold")).grid(row=0, column=1)
+            ctk.CTkLabel(_sb_logo_row, text="LocalKey", font=ctk.CTkFont(family="Helvetica", size=20, weight="bold")).grid(row=0, column=1)
         except Exception:
-            logo_label = ctk.CTkLabel(self.sidebar_frame, text="🔐 VaultMate", font=ctk.CTkFont(family="Helvetica", size=22, weight="bold"))
+            logo_label = ctk.CTkLabel(self.sidebar_frame, text="🔐 LocalKey", font=ctk.CTkFont(family="Helvetica", size=22, weight="bold"))
             logo_label.grid(row=0, column=0, padx=20, pady=(30, 5), sticky="w")
         
         welcome_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"Hi, {self.current_user['username']}!", font=ctk.CTkFont(family="Helvetica", size=14), text_color="gray")
@@ -837,7 +837,7 @@ class PasswordManager(ctk.CTk):
         if not password:
             return
             
-        file_path = filedialog.asksaveasfilename(defaultextension=".vaultmate_backup", filetypes=[("VaultMate Backup", "*.vaultmate_backup")])
+        file_path = filedialog.asksaveasfilename(defaultextension=".localkey_backup", filetypes=[("LocalKey Backup", "*.localkey_backup")])
         if not file_path:
             return
             
@@ -847,7 +847,7 @@ class PasswordManager(ctk.CTk):
             from cryptography.fernet import Fernet
             f = Fernet(key)
             
-            with open("vaultmate.db", "rb") as db_file:
+            with open("localkey.db", "rb") as db_file:
                 db_data = db_file.read()
                 
             encrypted_data = f.encrypt(db_data)
@@ -863,7 +863,7 @@ class PasswordManager(ctk.CTk):
         if not messagebox.askyesno("Warning", "Importing a backup will OVERWRITE your current vault. Do you want to continue?"):
             return
             
-        file_path = filedialog.askopenfilename(filetypes=[("VaultMate Backup", "*.vaultmate_backup")])
+        file_path = filedialog.askopenfilename(filetypes=[("LocalKey Backup", "*.localkey_backup")])
         if not file_path:
             return
             
@@ -889,7 +889,7 @@ class PasswordManager(ctk.CTk):
             
             self.db.conn.close()
             
-            with open("vaultmate.db", "wb") as db_file:
+            with open("localkey.db", "wb") as db_file:
                 db_file.write(decrypted_data)
                 
             messagebox.showinfo("Success", "Backup restored successfully! The application will now close. Please restart it.")
