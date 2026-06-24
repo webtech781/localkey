@@ -26,35 +26,35 @@
 
   <!-- ═══ InstallUISequence ════════════════════════════════════════════════ -->
   <InstallUISequence>
-    <Show Dialog="PrepareDlg"       Before="WelcomeDlg" />
-    <Show Dialog="WelcomeDlg"       After="PrepareDlg"     >NOT Installed</Show>
-    <Show Dialog="LicenseDlg"       After="WelcomeDlg"     >NOT Installed</Show>
-    <Show Dialog="FeaturesDlg"      After="LicenseDlg"     >NOT Installed</Show>
-    <Show Dialog="VerifyReadyDlg"   After="FeaturesDlg"    >NOT Installed</Show>
-    <Show Dialog="VmProgressDlg"    After="VerifyReadyDlg" />
+    <Show Dialog="PrepareDlg"       Before="VmWelcomeDlg" />
+    <Show Dialog="VmWelcomeDlg"       After="PrepareDlg"     >NOT Installed</Show>
+    <Show Dialog="VmLicenseDlg"       After="VmWelcomeDlg"     >NOT Installed</Show>
+    <Show Dialog="VmFeaturesDlg"      After="VmLicenseDlg"     >NOT Installed</Show>
+    <Show Dialog="VmVerifyReadyDlg"   After="VmFeaturesDlg"    >NOT Installed</Show>
+    <Show Dialog="VmProgressDlg"    After="VmVerifyReadyDlg" />
     <Show Dialog="VmExitDlg"        After="VmProgressDlg"  />
   </InstallUISequence>
 
   <!-- ═══ Navigation events ════════════════════════════════════════════════ -->
 
-  <!-- WelcomeDlg -->
-  <Publish Dialog="WelcomeDlg"     Control="Next"   Event="NewDialog"   Value="LicenseDlg"     >1</Publish>
-  <Publish Dialog="WelcomeDlg"     Control="Cancel" Event="SpawnDialog" Value="CancelDlg"      >1</Publish>
+  <!-- VmWelcomeDlg -->
+  <Publish Dialog="VmWelcomeDlg"     Control="Next"   Event="NewDialog"   Value="VmLicenseDlg"     >1</Publish>
+  <Publish Dialog="VmWelcomeDlg"     Control="Cancel" Event="SpawnDialog" Value="VmCancelDlg"      >1</Publish>
 
-  <!-- LicenseDlg -->
-  <Publish Dialog="LicenseDlg"     Control="Back"   Event="NewDialog"   Value="WelcomeDlg"     >1</Publish>
-  <Publish Dialog="LicenseDlg"     Control="Next"   Event="NewDialog"   Value="FeaturesDlg"    >LicenseAccepted = "1"</Publish>
-  <Publish Dialog="LicenseDlg"     Control="Cancel" Event="SpawnDialog" Value="CancelDlg"      >1</Publish>
+  <!-- VmLicenseDlg -->
+  <Publish Dialog="VmLicenseDlg"     Control="Back"   Event="NewDialog"   Value="VmWelcomeDlg"     >1</Publish>
+  <Publish Dialog="VmLicenseDlg"     Control="Next"   Event="NewDialog"   Value="VmFeaturesDlg"    >LicenseAccepted = "1"</Publish>
+  <Publish Dialog="VmLicenseDlg"     Control="Cancel" Event="SpawnDialog" Value="VmCancelDlg"      >1</Publish>
 
-  <!-- FeaturesDlg -->
-  <Publish Dialog="FeaturesDlg"    Control="Back"   Event="NewDialog"   Value="LicenseDlg"     >1</Publish>
-  <Publish Dialog="FeaturesDlg"    Control="Next"   Event="NewDialog"   Value="VerifyReadyDlg" >1</Publish>
-  <Publish Dialog="FeaturesDlg"    Control="Cancel" Event="SpawnDialog" Value="CancelDlg"      >1</Publish>
+  <!-- VmFeaturesDlg -->
+  <Publish Dialog="VmFeaturesDlg"    Control="Back"   Event="NewDialog"   Value="VmLicenseDlg"     >1</Publish>
+  <Publish Dialog="VmFeaturesDlg"    Control="Next"   Event="NewDialog"   Value="VmVerifyReadyDlg" >1</Publish>
+  <Publish Dialog="VmFeaturesDlg"    Control="Cancel" Event="SpawnDialog" Value="VmCancelDlg"      >1</Publish>
 
-  <!-- VerifyReadyDlg -->
-  <Publish Dialog="VerifyReadyDlg" Control="Back"   Event="NewDialog"   Value="FeaturesDlg"    >1</Publish>
-  <Publish Dialog="VerifyReadyDlg" Control="Install" Event="EndDialog"  Value="Return"         >1</Publish>
-  <Publish Dialog="VerifyReadyDlg" Control="Cancel" Event="SpawnDialog" Value="CancelDlg"      >1</Publish>
+  <!-- VmVerifyReadyDlg -->
+  <Publish Dialog="VmVerifyReadyDlg" Control="Back"   Event="NewDialog"   Value="VmFeaturesDlg"    >1</Publish>
+  <Publish Dialog="VmVerifyReadyDlg" Control="Install" Event="EndDialog"  Value="Return"         >1</Publish>
+  <Publish Dialog="VmVerifyReadyDlg" Control="Cancel" Event="SpawnDialog" Value="VmCancelDlg"      >1</Publish>
 
   <!-- VmProgressDlg — Show Logs button -->
   <Publish Dialog="VmProgressDlg"  Control="ShowLogsBt"
@@ -64,7 +64,7 @@
   <Publish Dialog="VmProgressDlg"  Control="HideLogsBt"
            Property="SHOW_LOGS" Value="{}">1</Publish>
   <Publish Dialog="VmProgressDlg"  Control="Cancel"
-           Event="SpawnDialog" Value="CancelDlg">1</Publish>
+           Event="SpawnDialog" Value="VmCancelDlg">1</Publish>
 
   <!-- VmExitDlg — View Log button opens Notepad -->
   <Publish Dialog="VmExitDlg"      Control="ViewLogBt"
@@ -72,9 +72,9 @@
   <Publish Dialog="VmExitDlg"      Control="Finish"
            Event="EndDialog" Value="Return">1</Publish>
 
-  <!-- CancelDlg -->
-  <Publish Dialog="CancelDlg"      Control="Return" Event="EndDialog" Value="Return">1</Publish>
-  <Publish Dialog="CancelDlg"      Control="Exit"   Event="EndDialog" Value="Exit">1</Publish>
+  <!-- VmCancelDlg -->
+  <Publish Dialog="VmCancelDlg"      Control="Return" Event="EndDialog" Value="Return">1</Publish>
+  <Publish Dialog="VmCancelDlg"      Control="Exit"   Event="EndDialog" Value="Exit">1</Publish>
 
 </UI>
 
@@ -82,9 +82,9 @@
      DIALOGS
 ════════════════════════════════════════════════════════════════════════════ -->
 
-<!-- ── WelcomeDlg ─────────────────────────────────────────────────────────── -->
+<!-- ── VmWelcomeDlg ─────────────────────────────────────────────────────────── -->
 <UI>
-<Dialog Id="WelcomeDlg" Width="370" Height="270" Title="LocalKey Setup">
+<Dialog Id="VmWelcomeDlg" Width="370" Height="270" Title="LocalKey Setup">
   <Control Id="Bmp"         Type="Bitmap"     X="0"   Y="0"   Width="164" Height="270" TabSkip="no" Text="WixUI_Bmp_Dialog" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" Width="370" Height="0" />
   <Control Id="Title"       Type="Text"       X="135" Y="20"  Width="220" Height="60" Transparent="yes" NoPrefix="yes">
@@ -98,8 +98,8 @@
   <Control Id="Back"        Type="PushButton" X="180" Y="243" Width="56"  Height="17" Disabled="yes" Text="&lt; &amp;Back" />
 </Dialog>
 
-<!-- ── LicenseDlg ────────────────────────────────────────────────────────── -->
-<Dialog Id="LicenseDlg" Width="370" Height="270" Title="LocalKey Setup — License Agreement">
+<!-- ── VmLicenseDlg ────────────────────────────────────────────────────────── -->
+<Dialog Id="VmLicenseDlg" Width="370" Height="270" Title="LocalKey Setup — License Agreement">
   <Control Id="BannerBmp"   Type="Bitmap"     X="0"   Y="0"   Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"       X="0"   Y="44"  Width="370" Height="0" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" Width="370" Height="0" />
@@ -120,8 +120,8 @@
   <Control Id="Cancel"      Type="PushButton" X="304" Y="243" Width="56"  Height="17" Cancel="yes"  Text="Cancel" />
 </Dialog>
 
-<!-- ── FeaturesDlg (Desktop Shortcut checkbox) ────────────────────────────── -->
-<Dialog Id="FeaturesDlg" Width="370" Height="270" Title="LocalKey Setup — Options">
+<!-- ── VmFeaturesDlg (Desktop Shortcut checkbox) ────────────────────────────── -->
+<Dialog Id="VmFeaturesDlg" Width="370" Height="270" Title="LocalKey Setup — Options">
   <Control Id="BannerBmp"   Type="Bitmap"     X="0"   Y="0"   Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"       X="0"   Y="44"  Width="370" Height="0" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" Width="370" Height="0" />
@@ -137,8 +137,8 @@
   <Control Id="Cancel"      Type="PushButton" X="304" Y="243" Width="56"  Height="17" Cancel="yes"  Text="Cancel" />
 </Dialog>
 
-<!-- ── VerifyReadyDlg ─────────────────────────────────────────────────────── -->
-<Dialog Id="VerifyReadyDlg" Width="370" Height="270" Title="LocalKey Setup — Ready to Install">
+<!-- ── VmVerifyReadyDlg ─────────────────────────────────────────────────────── -->
+<Dialog Id="VmVerifyReadyDlg" Width="370" Height="270" Title="LocalKey Setup — Ready to Install">
   <Control Id="BannerBmp"   Type="Bitmap"     X="0"   Y="0"   Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
   <Control Id="BannerLine"  Type="Line"       X="0"   Y="44"  Width="370" Height="0" />
   <Control Id="BottomLine"  Type="Line"       X="0"   Y="234" Width="370" Height="0" />
@@ -210,8 +210,8 @@
   <Control Id="Back"        Type="PushButton" X="180" Y="243" Width="56"  Height="17" Disabled="yes" Text="&lt; &amp;Back" />
 </Dialog>
 
-<!-- ── CancelDlg ─────────────────────────────────────────────────────────── -->
-<Dialog Id="CancelDlg" Width="260" Height="85" Title="LocalKey Setup" NoMinimize="yes">
+<!-- ── VmCancelDlg ─────────────────────────────────────────────────────────── -->
+<Dialog Id="VmCancelDlg" Width="260" Height="85" Title="LocalKey Setup" NoMinimize="yes">
   <Control Id="Question"    Type="Text"       X="48"  Y="15"  Width="194" Height="30" Text="Are you sure you want to cancel LocalKey installation?" />
   <Control Id="Return"      Type="PushButton" X="100" Y="57"  Width="56"  Height="17" Default="yes" Text="&amp;Return" />
   <Control Id="Exit"        Type="PushButton" X="164" Y="57"  Width="56"  Height="17" Cancel="yes"  Text="E&amp;xit" />
