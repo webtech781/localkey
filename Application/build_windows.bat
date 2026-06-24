@@ -1,7 +1,7 @@
 @echo off
 REM =============================================================================
 REM LocalKey Windows Build Script
-REM Produces: dist\LocalKey-windows-x64.zip
+REM Produces: dist\LocalKey\ (standalone directory)
 REM Run from within the Application\ directory with Python in PATH
 REM =============================================================================
 
@@ -35,17 +35,10 @@ echo [3/5] PyInstaller build complete.
 REM --- 4. Copy native host alongside GUI ---
 echo [4/5] Packaging native host... (handled by PyInstaller spec file)
 
-REM --- 5. Create ZIP archive ---
-echo [5/5] Creating ZIP archive...
-set VERSION=1.0.0
-if defined LOCALKEY_VERSION set VERSION=%LOCALKEY_VERSION%
-
-powershell -Command "Compress-Archive -Path 'dist\LocalKey\*' -DestinationPath 'LocalKey-%VERSION%-windows-x64.zip' -Force"
-
 echo.
 echo ==============================
 echo  Build complete!
-echo  Output: LocalKey-%VERSION%-windows-x64.zip
+echo  Output directory: dist\LocalKey\
 echo ==============================
 echo.
-echo To run: Unzip and double-click LocalKey.exe
+echo To run: Double-click dist\LocalKey\LocalKey.exe

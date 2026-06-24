@@ -30,7 +30,7 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-# NOTE: vaultmate.spec is intentionally tracked — do not ignore *.spec here
+# NOTE: localkey.spec is intentionally tracked — do not ignore *.spec here
 
 # Installer logs
 pip-log.txt
@@ -173,13 +173,13 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# VaultMate local files
-vaultmate.db
-Application/vaultmate.db
-vaultmate_config.json
-Application/vaultmate_config.json
+# LocalKey local files
+localkey.db
+Application/localkey.db
+localkey_config.json
+Application/localkey_config.json
 
-# VaultMate dev/test scripts (not for end users)
+# LocalKey dev/test scripts (not for end users)
 test_*.py
 Application/test_*.py
 
@@ -188,7 +188,7 @@ notes.txt
 code_explanation.txt
 
 # Empty/stale directories
-vaultmate-extension/
+localkey-extension/
 extension/
 
 # PyInstaller build output

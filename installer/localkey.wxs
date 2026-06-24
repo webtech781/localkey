@@ -81,7 +81,7 @@
                  Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678901">
         <Shortcut Id="StartMenuShortcut"
                   Name="LocalKey"
-                  Target="[INSTALLDIR]Application\dist\LocalKey\LocalKey.exe"
+                  Target="[INSTALLDIR]Application\dist\LocalKey.exe"
                   WorkingDirectory="INSTALLDIR"
                   Icon="LocalKeyIco"
                   IconIndex="0"
@@ -104,7 +104,7 @@
                  Guid="C3D4E5F6-A7B8-9012-CDEF-123456789012">
         <Shortcut Id="DesktopShortcut"
                   Name="LocalKey"
-                  Target="[INSTALLDIR]Application\dist\LocalKey\LocalKey.exe"
+                  Target="[INSTALLDIR]Application\dist\LocalKey.exe"
                   WorkingDirectory="INSTALLDIR"
                   Icon="LocalKeyIco"
                   IconIndex="0"

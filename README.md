@@ -154,7 +154,7 @@ localkey/
 │   ├── localkey.spec         # PyInstaller build spec (all platforms)
 │   ├── build_linux.sh         # Linux build script → .tar.gz
 │   ├── build_macos.sh         # macOS build script → .dmg
-│   ├── build_windows.bat      # Windows build script → .zip
+│   ├── build_windows.bat      # Windows build script → standalone directory
 │   └── requirements.txt       # Python dependencies
 │
 ├── extension-firefox/         # Firefox extension (MV2, fully tested ✅)

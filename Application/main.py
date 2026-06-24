@@ -899,5 +899,19 @@ class PasswordManager(ctk.CTk):
             self.db = Database()
 
 if __name__ == "__main__":
-    app = PasswordManager()
-    app.mainloop()
+    import sys
+    # Check if launched by a browser as a native messaging host.
+    # Chrome/Brave/Edge pass: chrome-extension://<extension_id>/
+    # Firefox passes: <path_to_native_messaging_manifest.json> <extension_id>
+    is_native = False
+    if len(sys.argv) > 1:
+        arg1 = sys.argv[1]
+        if "chrome-extension://" in arg1 or arg1.endswith(".json") or "vaultmate@local.dev" in arg1 or "localkey" in arg1:
+            is_native = True
+
+    if is_native:
+        import native_host
+        native_host.main()
+    else:
+        app = PasswordManager()
+        app.mainloop()

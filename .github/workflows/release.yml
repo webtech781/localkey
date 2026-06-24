@@ -1,4 +1,4 @@
-name: Build & Release VaultMate
+name: Build & Release LocalKey
 
 on:
   push:
@@ -22,7 +22,7 @@ env:
 
 jobs:
   # ══════════════════════════════════════════════
-  # LINUX — produces VaultMate-v*-linux-x86_64.tar.gz
+  # LINUX — produces LocalKey-v*-linux-x86_64.tar.gz
   # ══════════════════════════════════════════════
   build-linux:
     name: 🐧 Build Linux
@@ -47,32 +47,21 @@ jobs:
 
       - name: PyInstaller build
         working-directory: Application
-        run: pyinstaller vaultmate.spec --clean --noconfirm
-
-      - name: Bundle native host
-        working-directory: Application
-        run: |
-          cp native_host.py dist/VaultMate/
-          cat > dist/VaultMate/native_host.sh << 'SHEOF'
-          #!/bin/bash
-          DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          exec python3 "$DIR/native_host.py" "$@"
-          SHEOF
-          chmod +x dist/VaultMate/native_host.sh
+        run: pyinstaller localkey.spec --clean --noconfirm
 
       - name: Package tar.gz
         run: |
           VERSION="${{ env.VERSION }}"
           cd Application/dist
-          tar -czf "../../VaultMate-${VERSION}-linux-x86_64.tar.gz" VaultMate/
+          tar -czf "../../LocalKey-${VERSION}-linux-x86_64.tar.gz" LocalKey
 
       - uses: actions/upload-artifact@v4
         with:
           name: linux-build
-          path: VaultMate-*-linux-x86_64.tar.gz
+          path: LocalKey-*-linux-x86_64.tar.gz
 
   # ══════════════════════════════════════════════
-  # WINDOWS — produces VaultMate-Setup-v*-windows.msi
+  # WINDOWS — produces LocalKey-Setup-v*-windows.msi
   # ══════════════════════════════════════════════
   build-windows:
     name: 🪟 Build Windows MSI
@@ -120,22 +109,22 @@ jobs:
       - name: Build MSI
         shell: pwsh
         env:
-          VAULTMATE_VERSION: ${{ env.VERSION }}
+          LOCALKEY_VERSION: ${{ env.VERSION }}
         run: |
-          $ver = $env:VAULTMATE_VERSION -replace '^v',''
+          $ver = $env:LOCALKEY_VERSION -replace '^v',''
           # WiX requires x.x.x.x (4-part) version — pad 3-part semver with .0
           $wixVer = if ($ver -match '^\d+\.\d+\.\d+$') { "$ver.0" } else { $ver }
-          $env:VAULTMATE_VERSION = $wixVer
+          $env:LOCALKEY_VERSION = $wixVer
           Write-Host "Version (semver): $ver  |  Version (WiX): $wixVer"
           # Find WiX bin dynamically (handles any installed patch version)
           $wixDir = Get-ChildItem "C:\Program Files (x86)\WiX Toolset*" | Select-Object -First 1
           $bin = Join-Path $wixDir.FullName "bin"
           Write-Host "Using WiX at: $bin"
 
-          # Compile .wxs → .wixobj  (vaultmate.wxs + CustomUI.wxs)
+          # Compile .wxs → .wixobj  (localkey.wxs + CustomUI.wxs)
           & "$bin\candle.exe" -nologo -arch x64 `
             -ext WixUIExtension -ext WixUtilExtension `
-            installer\vaultmate.wxs installer\CustomUI.wxs `
+            installer\localkey.wxs installer\CustomUI.wxs `
             -out installer\
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -143,11 +132,11 @@ jobs:
           & "$bin\light.exe" -nologo `
             -ext WixUIExtension -ext WixUtilExtension `
             -cultures:en-us `
-            installer\vaultmate.wixobj installer\CustomUI.wixobj `
-            -out "VaultMate-Setup-v${ver}-windows.msi"
+            installer\localkey.wixobj installer\CustomUI.wixobj `
+            -out "LocalKey-Setup-v${ver}-windows.msi"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          $out = "VaultMate-Setup-v${ver}-windows.msi"
+          $out = "LocalKey-Setup-v${ver}-windows.msi"
           if (Test-Path $out) {
             Write-Host "✅ MSI created: $out"
           } else {
@@ -157,10 +146,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: VaultMate-Setup-*.msi
+          path: LocalKey-Setup-*.msi
 
   # ══════════════════════════════════════════════
-  # MACOS — produces VaultMate-v*-macOS-arm64.dmg
+  # MACOS — produces LocalKey-v*-macOS-arm64.dmg
   # ══════════════════════════════════════════════
   build-macos:
     name: 🍎 Build macOS DMG
@@ -182,42 +171,29 @@ jobs:
 
       - name: PyInstaller build
         working-directory: Application
-        run: pyinstaller vaultmate.spec --clean --noconfirm
-
-      - name: Embed native host into .app
-        working-directory: Application
-        run: |
-          RESOURCES="dist/VaultMate.app/Contents/Resources"
-          mkdir -p "$RESOURCES"
-          cp native_host.py "$RESOURCES/"
-          cat > "$RESOURCES/native_host.sh" << 'SHEOF'
-          #!/bin/bash
-          DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          exec python3 "$DIR/native_host.py" "$@"
-          SHEOF
-          chmod +x "$RESOURCES/native_host.sh"
+        run: pyinstaller localkey.spec --clean --noconfirm
 
       - name: Create DMG
         run: |
           VERSION="${{ env.VERSION }}"
           ARCH="$(uname -m)"
-          DMG="VaultMate-${VERSION}-macOS-${ARCH}.dmg"
+          DMG="LocalKey-${VERSION}-macOS-${ARCH}.dmg"
           create-dmg \
-            --volname "VaultMate" \
+            --volname "LocalKey" \
             --volicon "Application/icon256.png" \
             --window-pos 200 120 \
             --window-size 600 380 \
             --icon-size 100 \
-            --icon "VaultMate.app" 175 180 \
-            --hide-extension "VaultMate.app" \
+            --icon "LocalKey.app" 175 180 \
+            --hide-extension "LocalKey.app" \
             --app-drop-link 420 180 \
             "$DMG" \
-            "Application/dist/VaultMate.app"
+            "Application/dist/LocalKey.app"
 
       - uses: actions/upload-artifact@v4
         with:
           name: macos-build
-          path: VaultMate-*-macOS-*.dmg
+          path: LocalKey-*-macOS-*.dmg
 
   # ══════════════════════════════════════════════
   # RELEASE — attach all 3 to a GitHub Release
@@ -253,25 +229,24 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
-          name: "VaultMate ${{ env.VERSION }}"
+          name: "LocalKey ${{ env.VERSION }}"
           body: |
-            ## 🔐 VaultMate ${{ env.VERSION }}
+            ## 🔐 LocalKey ${{ env.VERSION }}
 
             ### ⬇️ Direct Downloads
 
             | Platform | Download | Notes |
             |---|---|---|
-            | 🐧 **Linux** (x86_64) | `VaultMate-${{ env.VERSION }}-linux-x86_64.tar.gz` | Extract & run `./VaultMate` |
-            | 🪟 **Windows** (10/11) | `VaultMate-Setup-${{ env.VERSION }}-windows.msi` | Double-click → installs Python if needed, downloads & builds VaultMate automatically |
-            | 🍎 **macOS** (12+) | `VaultMate-${{ env.VERSION }}-macOS-arm64.dmg` | Open DMG → drag to Applications |
+            | 🐧 **Linux** (x86_64) | `LocalKey-${{ env.VERSION }}-linux-x86_64.tar.gz` | Extract & run `./LocalKey` |
+            | 🪟 **Windows** (10/11) | `LocalKey-Setup-${{ env.VERSION }}-windows.msi` | Double-click → installs Python if needed, downloads & builds LocalKey automatically |
+            | 🍎 **macOS** (12+) | `LocalKey-${{ env.VERSION }}-macOS-arm64.dmg` | Open DMG → drag to Applications |
 
             ### 🦊 Firefox Extension (Fully Tested ✅)
             Load `extension-firefox/` via `about:debugging` in Firefox.
 
             ### 🔗 After Installing
-            Open VaultMate → click **Browser Integrations** → **Add +** to connect your browser.
+            Open LocalKey → click **Browser Integrations** → **Add +** to connect your browser.
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
           files: release-assets/*
-

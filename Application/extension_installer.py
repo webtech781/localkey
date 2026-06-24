@@ -48,32 +48,31 @@ def install_for_browser(browser_name, extension_id=""):
     os_name = platform.system()
     
     # Detect if running from the compiled PyInstaller package.
-    # When packaged, the py files are inside _internal/ and __file__ is inside _internal/.
-    # The native host executable (localkey_native_host or localkey_native_host.exe) will be in the parent directory.
-    exe_ext = ".exe" if os_name == "Windows" else ""
-    binary_name = f"localkey_native_host{exe_ext}"
-    
-    parent_dir = os.path.dirname(current_dir)
-    bundled_binary_path = os.path.join(parent_dir, binary_name)
-    local_binary_path = os.path.join(current_dir, binary_name)
-    
-    # For macOS app bundle layout (Contents/MacOS/localkey_native_host relative to Contents/Resources/_internal/)
-    macos_binary_path = os.path.join(os.path.dirname(parent_dir), "MacOS", binary_name)
-    
     is_binary = False
-    if os.path.exists(bundled_binary_path):
-        native_host_path = bundled_binary_path
-        is_binary = True
-    elif os.path.exists(macos_binary_path):
-        native_host_path = macos_binary_path
-        is_binary = True
-    elif os.path.exists(local_binary_path):
-        native_host_path = local_binary_path
+    if getattr(sys, 'frozen', False):
+        native_host_path = sys.executable
         is_binary = True
     else:
-        native_host_path = os.path.join(current_dir, "native_host.py")
-        if not os.path.exists(native_host_path):
-            return False, f"Could not find native_host.py or localkey_native_host at {current_dir}"
+        exe_ext = ".exe" if os_name == "Windows" else ""
+        binary_name = f"localkey_native_host{exe_ext}"
+        parent_dir = os.path.dirname(current_dir)
+        bundled_binary_path = os.path.join(parent_dir, binary_name)
+        local_binary_path = os.path.join(current_dir, binary_name)
+        macos_binary_path = os.path.join(os.path.dirname(parent_dir), "MacOS", binary_name)
+        
+        if os.path.exists(bundled_binary_path):
+            native_host_path = bundled_binary_path
+            is_binary = True
+        elif os.path.exists(macos_binary_path):
+            native_host_path = macos_binary_path
+            is_binary = True
+        elif os.path.exists(local_binary_path):
+            native_host_path = local_binary_path
+            is_binary = True
+        else:
+            native_host_path = os.path.join(current_dir, "native_host.py")
+            if not os.path.exists(native_host_path):
+                return False, f"Could not find native_host.py or localkey_native_host at {current_dir}"
 
     manifest = {
         "name": HOST_NAME,

@@ -225,8 +225,8 @@ Section "LocalKey (required)" SecMain
     ; Step 6 – Start Menu shortcut (always created)
     CreateDirectory "$SMPROGRAMS\LocalKey"
     CreateShortcut "$SMPROGRAMS\LocalKey\LocalKey.lnk" \
-        "$INSTDIR\Application\dist\LocalKey\${APP_EXE}" "" \
-        "$INSTDIR\Application\dist\LocalKey\${APP_EXE}" 0 \
+        "$INSTDIR\Application\dist\${APP_EXE}" "" \
+        "$INSTDIR\Application\dist\${APP_EXE}" 0 \
         SW_SHOWNORMAL "" "LocalKey Password Manager"
     CreateShortcut "$SMPROGRAMS\LocalKey\Uninstall LocalKey.lnk" \
         "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
@@ -234,8 +234,8 @@ Section "LocalKey (required)" SecMain
     ; Step 7 – Desktop shortcut (optional)
     ${If} $DesktopShortcut == ${BST_CHECKED}
         CreateShortcut "$DESKTOP\LocalKey.lnk" \
-            "$INSTDIR\Application\dist\LocalKey\${APP_EXE}" "" \
-            "$INSTDIR\Application\dist\LocalKey\${APP_EXE}" 0 \
+            "$INSTDIR\Application\dist\${APP_EXE}" "" \
+            "$INSTDIR\Application\dist\${APP_EXE}" 0 \
             SW_SHOWNORMAL "" "LocalKey Password Manager"
     ${EndIf}
 
@@ -248,7 +248,7 @@ Section "LocalKey (required)" SecMain
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LocalKey" \
         "UninstallString" '"$INSTDIR\Uninstall.exe"'
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LocalKey" \
-        "DisplayIcon"     "$INSTDIR\Application\dist\LocalKey\${APP_EXE}"
+        "DisplayIcon"     "$INSTDIR\Application\dist\${APP_EXE}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LocalKey" \
         "Publisher"       "${APP_PUBLISHER}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LocalKey" \

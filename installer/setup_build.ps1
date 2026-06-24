@@ -94,7 +94,7 @@ if ($proc.ExitCode -ne 0) { throw "Build failed (exit $($proc.ExitCode)). See $l
 Log "Build complete."
 
 # ── 5. Desktop shortcut (if requested) ───────────────────────────────────────
-$exePath = Join-Path $InstallDir "Application\dist\LocalKey\LocalKey.exe"
+$exePath = Join-Path $InstallDir "Application\dist\LocalKey.exe"
 if ($WantDesktop -eq "1" -and (Test-Path $exePath)) {
     # CA runs as SYSTEM — $env:USERPROFILE would point to SYSTEM's profile,
     # not the real user's Desktop. Use the Public Desktop instead (visible to all users).
