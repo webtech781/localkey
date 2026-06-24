@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   LocalKey Custom Installer UI
   Replaces WixUI_FeatureTree so we can customise the ProgressDlg
@@ -7,6 +7,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 <Fragment>
 <UI Id="LocalKeyUI">
+  <UIRef Id="WixUI_Common" />
 
   <!-- ═══ Text styles ═══════════════════════════════════════════════════════ -->
   <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
