@@ -25,15 +25,23 @@
   <DialogRef Id="ResumeDlg"          />
   <DialogRef Id="UserExit"           />
 
-  <!-- ═══ InstallUISequence ════════════════════════════════════════════════ -->
   <InstallUISequence>
     <Show Dialog="VmWelcomeDlg"       After="PrepareDlg"     >NOT Installed</Show>
     <Show Dialog="VmLicenseDlg"       After="VmWelcomeDlg"     >NOT Installed</Show>
     <Show Dialog="VmFeaturesDlg"      After="VmLicenseDlg"     >NOT Installed</Show>
     <Show Dialog="VmVerifyReadyDlg"   After="VmFeaturesDlg"    >NOT Installed</Show>
     <Show Dialog="VmProgressDlg"    After="VmVerifyReadyDlg" />
-    <Show Dialog="VmExitDlg"        After="VmProgressDlg"  />
+    <Show Dialog="VmExitDlg"        OnExit="success" />
+    <Show Dialog="FatalError"       OnExit="error" />
+    <Show Dialog="UserExit"         OnExit="cancel" />
   </InstallUISequence>
+
+  <!-- ═══ AdminUISequence ══════════════════════════════════════════════════ -->
+  <AdminUISequence>
+    <Show Dialog="VmExitDlg"        OnExit="success" />
+    <Show Dialog="FatalError"       OnExit="error" />
+    <Show Dialog="UserExit"         OnExit="cancel" />
+  </AdminUISequence>
 
   <!-- ═══ Navigation events ════════════════════════════════════════════════ -->
 
@@ -205,9 +213,7 @@
     <Text>Click Finish to exit the Setup Wizard. LocalKey is building in the background — check the log for details.</Text>
   </Control>
   <Control Id="ViewLogBt"   Type="PushButton" X="135" Y="155" Width="90"  Height="17" Text="View Install Log" />
-  <Control Id="Finish"      Type="PushButton" X="236" Y="243" Width="56"  Height="17" Default="yes" Text="&amp;Finish" />
-  <Control Id="Cancel"      Type="PushButton" X="304" Y="243" Width="56"  Height="17" Cancel="yes"  Text="Cancel" />
-  <Control Id="Back"        Type="PushButton" X="180" Y="243" Width="56"  Height="17" Disabled="yes" Text="&lt; &amp;Back" />
+  <Control Id="Finish"      Type="PushButton" X="236" Y="243" Width="56"  Height="17" Default="yes" Cancel="yes" Text="&amp;Finish" />
 </Dialog>
 
 <!-- ── VmCancelDlg ─────────────────────────────────────────────────────────── -->
