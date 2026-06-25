@@ -171,13 +171,13 @@
   <Control Id="ActionText"  Type="Text"         X="20"  Y="88"  Width="250" Height="10"  Transparent="yes" Text="[ActionText]" />
 
   <!-- Show Logs button — visible when log is hidden -->
-  <Control Id="ShowLogsBt"  Type="PushButton"   X="280" Y="85"  Width="70"  Height="14"  Text="Show Logs ▼">
+  <Control Id="ShowLogsBt"  Type="PushButton"   X="280" Y="85"  Width="70"  Height="14"  Text="Show Logs &gt;&gt;">
     <Condition Action="show">NOT SHOW_LOGS = "1"</Condition>
     <Condition Action="hide">SHOW_LOGS = "1"</Condition>
   </Control>
 
   <!-- Hide Logs button — visible when log is shown -->
-  <Control Id="HideLogsBt"  Type="PushButton"   X="280" Y="85"  Width="70"  Height="14"  Text="Hide Logs ▲" Hidden="yes">
+  <Control Id="HideLogsBt"  Type="PushButton"   X="280" Y="85"  Width="70"  Height="14"  Text="Hide Logs &lt;&lt;" Hidden="yes">
     <Condition Action="show">SHOW_LOGS = "1"</Condition>
     <Condition Action="hide">NOT SHOW_LOGS = "1"</Condition>
   </Control>
