@@ -18,12 +18,12 @@
 
   <!-- ═══ Error / system dialogs (kept from WixUI library) ════════════════ -->
   <DialogRef Id="ErrorDlg"           />
-  <DialogRef Id="FatalErrorDlg"      />
-  <DialogRef Id="FilesInUseDlg"      />
-  <DialogRef Id="MsiRMFilesInUseDlg" />
+  <DialogRef Id="FatalError"         />
+  <DialogRef Id="FilesInUse"         />
+  <DialogRef Id="MsiRMFilesInUse"    />
   <DialogRef Id="PrepareDlg"         />
   <DialogRef Id="ResumeDlg"          />
-  <DialogRef Id="UserExitDlg"        />
+  <DialogRef Id="UserExit"           />
 
   <!-- ═══ InstallUISequence ════════════════════════════════════════════════ -->
   <InstallUISequence>
