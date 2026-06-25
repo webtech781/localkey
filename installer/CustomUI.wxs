@@ -26,7 +26,7 @@
   <DialogRef Id="UserExit"           />
 
   <InstallUISequence>
-    <Show Dialog="VmWelcomeDlg"       After="PrepareDlg"     >NOT Installed</Show>
+    <Show Dialog="VmWelcomeDlg"       After="MigrateFeatureStates">NOT Installed</Show>
     <Show Dialog="VmLicenseDlg"       After="VmWelcomeDlg"     >NOT Installed</Show>
     <Show Dialog="VmFeaturesDlg"      After="VmLicenseDlg"     >NOT Installed</Show>
     <Show Dialog="VmVerifyReadyDlg"   After="VmFeaturesDlg"    >NOT Installed</Show>
@@ -117,8 +117,8 @@
   <Control Id="Desc"        Type="Text"       X="25"  Y="23"  Width="320" Height="15" Transparent="yes" NoPrefix="yes">
     <Text>Please read the following license agreement carefully.</Text>
   </Control>
-  <!-- ScrollableText reads RTF content from WixUI_LicenseText property -->
-  <Control Id="LicText"     Type="ScrollableText" X="20" Y="45" Width="330" Height="155" Sunken="yes" TabSkip="no" Text="[WixUI_LicenseText]" />
+  <!-- ScrollableText reads RTF content from WixUILicenseRtf wix variable -->
+  <Control Id="LicText"     Type="ScrollableText" X="20" Y="45" Width="330" Height="155" Sunken="yes" TabSkip="no" Text="!(wix.WixUILicenseRtf)" />
   <Control Id="Accept"      Type="CheckBox"   X="20"  Y="206" Width="290" Height="15" Property="LicenseAccepted" CheckBoxValue="1" Text="I accept the terms in the License Agreement" />
   <Control Id="Back"        Type="PushButton" X="180" Y="243" Width="56"  Height="17" Text="&lt; &amp;Back" />
   <Control Id="Next"        Type="PushButton" X="236" Y="243" Width="56"  Height="17" Default="yes" Text="&amp;Next >">
@@ -139,7 +139,7 @@
   <Control Id="Desc"        Type="Text"       X="25"  Y="23"  Width="320" Height="15" Transparent="yes" NoPrefix="yes">
     <Text>Select optional features to install.</Text>
   </Control>
-  <Control Id="FeatureTree" Type="SelectionTree" X="25" Y="55" Width="320" Height="155" Property="WIXUI_INSTALLDIR" Sunken="yes" TabSkip="no" Text="{120}{70}{70}" />
+  <Control Id="FeatureTree" Type="SelectionTree" X="25" Y="55" Width="320" Height="155" Property="_BrowseProperty" Sunken="yes" TabSkip="no" Text="{120}{70}{70}" />
   <Control Id="Back"        Type="PushButton" X="180" Y="243" Width="56"  Height="17" Text="&lt; &amp;Back" />
   <Control Id="Next"        Type="PushButton" X="236" Y="243" Width="56"  Height="17" Default="yes" Text="&amp;Next >" />
   <Control Id="Cancel"      Type="PushButton" X="304" Y="243" Width="56"  Height="17" Cancel="yes"  Text="Cancel" />
