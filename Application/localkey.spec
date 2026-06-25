@@ -52,6 +52,7 @@ a = Analysis(
         'cbor2',
         'dotenv',
         'sqlite3',
+        'json',
         'database',
         'crypto_utils',
         'extension_installer',
