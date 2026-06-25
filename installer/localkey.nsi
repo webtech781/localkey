@@ -48,7 +48,7 @@ Var DesktopShortcut   ; 1 = create, 0 = skip
 !define MUI_UNICON                  "..\Application\localkey.ico"
 !define MUI_WELCOMEPAGE_TITLE       "Welcome to LocalKey Setup"
 !define MUI_WELCOMEPAGE_TEXT        "LocalKey is an offline password manager and passkey authenticator.$\n$\nThis installer will:$\n  • Download LocalKey source from GitHub$\n  • Build the application on your computer$\n  • Create Start Menu (and optionally Desktop) shortcuts$\n$\nClick Next to continue."
-!define MUI_FINISHPAGE_RUN          "$INSTDIR\dist\LocalKey\${APP_EXE}"
+!define MUI_FINISHPAGE_RUN          "$INSTDIR\Application\dist\${APP_EXE}"
 !define MUI_FINISHPAGE_RUN_TEXT     "Launch LocalKey now"
 !define MUI_FINISHPAGE_LINK         "Visit LocalKey on GitHub"
 !define MUI_FINISHPAGE_LINK_LOCATION "${APP_URL}"
