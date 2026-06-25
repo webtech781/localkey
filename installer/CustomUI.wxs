@@ -27,7 +27,6 @@
 
   <!-- ═══ InstallUISequence ════════════════════════════════════════════════ -->
   <InstallUISequence>
-    <Show Dialog="PrepareDlg"       Before="VmWelcomeDlg" />
     <Show Dialog="VmWelcomeDlg"       After="PrepareDlg"     >NOT Installed</Show>
     <Show Dialog="VmLicenseDlg"       After="VmWelcomeDlg"     >NOT Installed</Show>
     <Show Dialog="VmFeaturesDlg"      After="VmLicenseDlg"     >NOT Installed</Show>
